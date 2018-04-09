@@ -78,6 +78,10 @@ found:
   memset(p->context, 0, sizeof *p->context);
   p->context->eip = (uint)forkret;
 
+  #ifdef CS333_P1
+  p->start_ticks = ticks;
+  #endif  
+
   return p;
 }
 
@@ -499,6 +503,18 @@ static char *states[] = {
 // Print a process listing to console.  For debugging.
 // Runs when user types ^P on console.
 // No lock to avoid wedging a stuck machine further.
+
+#ifdef CS333_P1
+void
+procdump_print_helper(struct proc *p, char *state)
+{
+  uint elapsed = ticks - p->start_ticks;
+  uint first_digit = elapsed / 1000;
+  uint fraction_digits = elapsed % 1000;
+  cprintf("%d\t%s\t%s\t%d.%d\t", p->pid, state, p->name, first_digit, fraction_digits);
+}
+#endif
+
 void
 procdump(void)
 {
@@ -507,6 +523,10 @@ procdump(void)
   char *state;
   uint pc[10];
 
+  #ifdef CS333_P1
+  cprintf("\nPID\tState\tName\tElapsed\t PCs\n");
+  #endif
+
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->state == UNUSED)
       continue;
@@ -514,7 +534,11 @@ procdump(void)
       state = states[p->state];
     else
       state = "???";
+    #ifdef CS333_P1
+    procdump_print_helper(p, state);
+    #else
     cprintf("%d %s %s", p->pid, state, p->name);
+    #endif
     if(p->state == SLEEPING){
       getcallerpcs((uint*)p->context->ebp+2, pc);
       for(i=0; i<10 && pc[i] != 0; i++)
@@ -523,7 +547,6 @@ procdump(void)
     cprintf("\n");
   }
 }
-
 
 #ifdef CS333_P3P4
 static int
