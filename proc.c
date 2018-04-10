@@ -81,6 +81,10 @@ found:
   #ifdef CS333_P1
   p->start_ticks = ticks;
   #endif  
+  #ifdef CS333_P2
+  p->cpu_ticks_total = 0;
+  p->cpu_ticks_in = 0;
+  #endif
 
   return p;
 }
@@ -112,6 +116,9 @@ userinit(void)
   // Set default UID and GID
   p->uid = UID_DEFAULT;
   p->gid = GID_DEFAULT;
+
+  // Point Process 1's parent pointer to itself
+  p->parent = p;
   #endif
 
   safestrcpy(p->name, "initcode", sizeof(p->name));
@@ -329,6 +336,9 @@ scheduler(void)
       proc = p;
       switchuvm(p);
       p->state = RUNNING;
+      #ifdef CS333_P2
+      p->cpu_ticks_in = ticks;
+      #endif
       swtch(&cpu->scheduler, proc->context);
       switchkvm();
 
@@ -369,6 +379,9 @@ sched(void)
   if(readeflags()&FL_IF)
     panic("sched interruptible");
   intena = cpu->intena;
+  #ifdef CS333_P2
+  proc->cpu_ticks_total += ticks - proc->cpu_ticks_in;
+  #endif
   swtch(&proc->context, cpu->scheduler);
   cpu->intena = intena;
 }
@@ -518,12 +531,24 @@ static char *states[] = {
 
 #ifdef CS333_P1
 void
-procdump_print_helper(struct proc *p, char *state)
+procdumpP1(struct proc *p, char *state)
 {
   uint elapsed = ticks - p->start_ticks;
   uint first_digit = elapsed / 1000;
   uint fraction_digits = elapsed % 1000;
-  cprintf("%d\t%s\t%s\t%d.%d\t", p->pid, state, p->name, first_digit, fraction_digits);
+  cprintf("%d\t%s\t%d.%d\t%s\t%d\t", p->pid, p->name, first_digit, fraction_digits, state, p->sz);
+}
+#endif
+
+#ifdef CS333_P2
+void
+procdumpP2(struct proc *p, char *state)
+{
+  uint elapsed = ticks - p->start_ticks;
+  uint first_digit = elapsed / 1000;
+  uint fraction_digits = elapsed % 1000;
+  cprintf("%d\t%s\t%d\t%d\t%d\t%d.%d\t%d\t%s\t%d\t", 
+            p->pid, p->name, p->uid, p->gid, p->parent->pid, first_digit, fraction_digits, p->cpu_ticks_total, state, p->sz);
 }
 #endif
 
@@ -535,9 +560,18 @@ procdump(void)
   char *state;
   uint pc[10];
 
-  #ifdef CS333_P1
-  cprintf("\nPID\tState\tName\tElapsed\t PCs\n");
-  #endif
+// Conditional Compilation trick used with permission from Mark Morrissey
+#if defined(CS333_P3P4)
+#define HEADER "\nPID\tName\tUID\tGID\tPPID\tPrio\tElapsed\tCPU\tState\tSize\t PCs\n"
+#elif defined(CS333_P2)
+#define HEADER "\nPID\tName\tUID\tGID\tPPID\tElapsed\tCPU\tState\tSize\t PCs\n"
+#elif defined(CS333_P1)
+#define HEADER "\nPID\tName\tElapsed\tState\tSize\t PCs\n"
+#else
+#define HEADER ""
+#endif
+
+  cprintf(HEADER);
 
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->state == UNUSED)
@@ -546,11 +580,13 @@ procdump(void)
       state = states[p->state];
     else
       state = "???";
-    #ifdef CS333_P1
-    procdump_print_helper(p, state);
-    #else
+#if defined(CS333_P2)
+    procdumpP2(p, state);
+#elif defined(CS333_P1)
+    procdumpP1(p, state);
+#else
     cprintf("%d %s %s", p->pid, state, p->name);
-    #endif
+#endif
     if(p->state == SLEEPING){
       getcallerpcs((uint*)p->context->ebp+2, pc);
       for(i=0; i<10 && pc[i] != 0; i++)
