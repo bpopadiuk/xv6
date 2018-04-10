@@ -108,6 +108,12 @@ userinit(void)
   p->tf->esp = PGSIZE;
   p->tf->eip = 0;  // beginning of initcode.S
 
+  #ifdef CS333_P2
+  // Set default UID and GID
+  p->uid = UID_DEFAULT;
+  p->gid = GID_DEFAULT;
+  #endif
+
   safestrcpy(p->name, "initcode", sizeof(p->name));
   p->cwd = namei("/");
 
@@ -157,6 +163,12 @@ fork(void)
   np->sz = proc->sz;
   np->parent = proc;
   *np->tf = *proc->tf;
+
+  #ifdef CS333_P2
+  // Inherit parent UID and GID
+  np->uid = proc->uid;
+  np->gid = proc->gid;
+  #endif
 
   // Clear %eax so that fork returns 0 in the child.
   np->tf->eax = 0;

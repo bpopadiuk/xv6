@@ -69,6 +69,10 @@ struct proc {
   #ifdef CS333_P1
   uint start_ticks;            // Time stamp marking time of process initiation
   #endif
+  #ifdef CS333_P2
+  uint uid;
+  uint gid;
+  #endif
 };
 
 // Process memory is laid out contiguously, low addresses first:
