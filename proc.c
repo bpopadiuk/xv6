@@ -531,17 +531,27 @@ static char *states[] = {
 
 #ifdef CS333_P1
 void
+print_ticks_as_seconds(uint ticks)
+{
+  uint integer_part = ticks / 1000;
+  uint fractional_part = ticks % 1000;
+  cprintf("%d.", integer_part);
+  if(fractional_part < 10)
+    cprintf("00");
+  else if(fractional_part < 100)
+    cprintf("0");
+  cprintf("%d", fractional_part);
+}
+#endif
+
+#ifdef CS333_P1
+void
 procdumpP1(struct proc *p, char *state)
 {
   uint elapsed = ticks - p->start_ticks;
-  uint first_digit = elapsed / 1000;
-  uint fraction_digits = elapsed % 1000;
-  cprintf("%d\t%s\t%d.", p->pid, p->name, first_digit);
-  if(fraction_digits < 10)
-    cprintf("00");
-  else if(fraction_digits < 100)
-    cprintf("0");
-  cprintf("%d\t%s\t%d\t", fraction_digits, state, p->sz);
+  cprintf("%d\t%s\t", p->pid, p->name);
+  print_ticks_as_seconds(elapsed);
+  cprintf("\t%s\t%d\t", state, p->sz);
 }
 #endif
 
@@ -550,14 +560,13 @@ void
 procdumpP2(struct proc *p, char *state)
 {
   uint elapsed = ticks - p->start_ticks;
-  uint first_digit = elapsed / 1000;
-  uint fraction_digits = elapsed % 1000;
-  cprintf("%d\t%s\t%d\t%d\t%d\t%d.", p->pid, p->name, p->uid, p->gid, p->parent->pid, first_digit);
-  if(fraction_digits < 10) 
-    cprintf("00");
-  else if(fraction_digits < 100)
-    cprintf("0");
-  cprintf("%d\t%d\t%s\t%d\t", fraction_digits, p->cpu_ticks_total, state, p->sz);
+
+
+  cprintf("%d\t%s\t%d\t%d\t%d\t", p->pid, p->name, p->uid, p->gid, p->parent->pid);
+  print_ticks_as_seconds(elapsed);
+  cprintf("\t");
+  print_ticks_as_seconds(p->cpu_ticks_total);
+  cprintf("\t%s\t%d\t", state, p->sz);
 }
 #endif
 
