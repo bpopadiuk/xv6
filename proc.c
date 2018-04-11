@@ -536,7 +536,12 @@ procdumpP1(struct proc *p, char *state)
   uint elapsed = ticks - p->start_ticks;
   uint first_digit = elapsed / 1000;
   uint fraction_digits = elapsed % 1000;
-  cprintf("%d\t%s\t%d.%d\t%s\t%d\t", p->pid, p->name, first_digit, fraction_digits, state, p->sz);
+  cprintf("%d\t%s\t%d.", p->pid, p->name, first_digit);
+  if(fraction_digits < 10)
+    cprintf("00");
+  else if(fraction_digits < 100)
+    cprintf("0");
+  cprintf("%d\t%s\t%d\t", fraction_digits, state, p->sz);
 }
 #endif
 
@@ -547,8 +552,12 @@ procdumpP2(struct proc *p, char *state)
   uint elapsed = ticks - p->start_ticks;
   uint first_digit = elapsed / 1000;
   uint fraction_digits = elapsed % 1000;
-  cprintf("%d\t%s\t%d\t%d\t%d\t%d.%d\t%d\t%s\t%d\t", 
-            p->pid, p->name, p->uid, p->gid, p->parent->pid, first_digit, fraction_digits, p->cpu_ticks_total, state, p->sz);
+  cprintf("%d\t%s\t%d\t%d\t%d\t%d.", p->pid, p->name, p->uid, p->gid, p->parent->pid, first_digit);
+  if(fraction_digits < 10) 
+    cprintf("00");
+  else if(fraction_digits < 100)
+    cprintf("0");
+  cprintf("%d\t%d\t%s\t%d\t", fraction_digits, p->cpu_ticks_total, state, p->sz);
 }
 #endif
 

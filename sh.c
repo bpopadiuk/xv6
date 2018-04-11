@@ -14,8 +14,6 @@
 
 #define MAXARGS 10
 
-#define USE_BUILTINS_NOT_YET
-
 struct cmd {
   int type;
 };
@@ -144,7 +142,7 @@ getcmd(char *buf, int nbuf)
   return 0;
 }
 
-#ifdef USE_BUILTINS_NOT_YET
+#ifdef USE_BUILTINS
 // ***** processing for shell builtins begins here *****
 
 int
@@ -259,7 +257,7 @@ main(void)
         printf(2, "cannot cd %s\n", buf+3);
       continue;
     }
-#ifdef USE_BUILTINS_NOT_YET
+#ifdef USE_BUILTINS
     if (buf[0]=='_') {     // assume it is a builtin command
       dobuiltin(buf);
       continue;

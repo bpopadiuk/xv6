@@ -315,7 +315,7 @@ getcmd(char *buf, int nbuf)
      29f:	c3                   	ret    
 
 000002a0 <strncmp>:
-#ifdef USE_BUILTINS_NOT_YET
+#ifdef USE_BUILTINS
 // ***** processing for shell builtins begins here *****
 
 int
@@ -763,7 +763,7 @@ main(void)
       continue;
      64c:	eb 47                	jmp    695 <main+0xfa>
     }
-#ifdef USE_BUILTINS_NOT_YET
+#ifdef USE_BUILTINS
     if (buf[0]=='_') {     // assume it is a builtin command
      64e:	0f b6 05 00 1f 00 00 	movzbl 0x1f00,%eax
      655:	3c 5f                	cmp    $0x5f,%al
