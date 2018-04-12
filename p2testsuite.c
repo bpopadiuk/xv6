@@ -9,8 +9,8 @@
 // comment out tests for features the student doesn't have implemented
 // Note the CPUTIME_TEST requires GETPROCS_TEST
 #define UIDGIDPPID_TEST
-//#define CPUTIME_TEST
-//#define GETPROCS_TEST
+#define CPUTIME_TEST
+#define GETPROCS_TEST
 #define TIME_TEST
 
 
@@ -177,7 +177,7 @@ getcputime(char * name, struct uproc * table){
     return -1;
   }
   else
-    return p->CPU_total_ticks;
+    return (int) p->cpu_ticks_total;
 }
 
 static void

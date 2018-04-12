@@ -7,6 +7,10 @@
 #include "proc.h"
 #include "spinlock.h"
 
+#ifdef CS333_P2
+#include "uproc.h"
+#endif
+
 struct {
   struct spinlock lock;
   struct proc proc[NPROC];
@@ -524,6 +528,39 @@ static char *states[] = {
   [ZOMBIE]    "zombie"
 };
 
+// Populate uproc table from ptable
+
+#ifdef CS333_P2
+int
+getprocs(int max, struct uproc *table)
+{
+    struct proc *p;
+    int pcount;
+
+//    if(max > 64) 
+//        return -1; 
+
+    pcount = 0;
+    for(p = ptable.proc; p < &ptable.proc[max]; p++) {
+        if(pcount == NPROC)
+            return pcount;
+        table->pid = p->pid;
+        table->uid = p->uid;
+        table->gid = p->gid;
+        table->ppid = p->parent->pid;
+        table->elapsed = ticks - p->start_ticks;
+        table->cpu_ticks_total = p->cpu_ticks_total;
+        safestrcpy(table->state, states[p->state], sizeof(states[p->state]));
+        table->sz = p->sz;
+        safestrcpy(table->name, p->name, sizeof(p->name));
+        table += 1;
+        pcount += 1;
+    }
+        
+    return pcount;
+}    
+#endif  
+
 //PAGEBREAK: 36
 // Print a process listing to console.  For debugging.
 // Runs when user types ^P on console.
@@ -531,10 +568,10 @@ static char *states[] = {
 
 #ifdef CS333_P1
 void
-print_ticks_as_seconds(uint ticks)
+print_ticks_as_seconds(uint milliseconds)
 {
-  uint integer_part = ticks / 1000;
-  uint fractional_part = ticks % 1000;
+  uint integer_part = milliseconds / 1000;
+  uint fractional_part = milliseconds % 1000;
   cprintf("%d.", integer_part);
   if(fractional_part < 10)
     cprintf("00");

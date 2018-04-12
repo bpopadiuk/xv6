@@ -6,6 +6,7 @@
 #include "memlayout.h"
 #include "mmu.h"
 #include "proc.h"
+#include "uproc.h"
 
 int
 sys_fork(void)
@@ -157,5 +158,19 @@ sys_setgid(void)
         proc->gid = gid;
         return 0;
     }
+}
+
+int
+sys_getprocs(void)
+{
+    int max;
+    struct uproc *table;
+
+    if(argint(0, &max) < 0)
+        return -1;
+    if(argptr(1, (void*)&table, max*sizeof(struct uproc)) < 0)
+        return -1;
+
+    return getprocs(max, table);
 }
 #endif

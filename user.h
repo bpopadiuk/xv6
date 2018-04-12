@@ -1,5 +1,8 @@
 struct stat;
 struct rtcdate;
+#ifdef CS333_P2
+struct uproc;
+#endif
 
 // system calls
 int fork(void);
@@ -33,6 +36,7 @@ int getgid(void);
 int getppid(void);
 int setuid(uint);
 int setgid(uint);
+int getprocs(uint, struct uproc*);
 #endif
 
 // ulib.c
