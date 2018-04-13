@@ -537,10 +537,8 @@ getprocs(int max, struct uproc *table)
     struct proc *p;
     int pcount;
 
-//    if(max > 64) 
-//        return -1; 
-
     pcount = 0;
+    //acquire(&ptable.lock);
     for(p = ptable.proc; p < &ptable.proc[max]; p++) {
         if(pcount == NPROC)
             return pcount;
@@ -556,6 +554,7 @@ getprocs(int max, struct uproc *table)
         table += 1;
         pcount += 1;
     }
+    //release(&ptable.lock);
         
     return pcount;
 }    

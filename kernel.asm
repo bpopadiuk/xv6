@@ -10163,13 +10163,12 @@ getprocs(int max, struct uproc *table)
 80104fa3:	55                   	push   %ebp
 80104fa4:	89 e5                	mov    %esp,%ebp
 80104fa6:	83 ec 18             	sub    $0x18,%esp
+    struct proc *p;
     int pcount;
-
-//    if(max > 64) 
-//        return -1; 
 
     pcount = 0;
 80104fa9:	c7 45 f0 00 00 00 00 	movl   $0x0,-0x10(%ebp)
+    //acquire(&ptable.lock);
     for(p = ptable.proc; p < &ptable.proc[max]; p++) {
 80104fb0:	c7 45 f4 b4 39 11 80 	movl   $0x801139b4,-0xc(%ebp)
 80104fb7:	e9 c0 00 00 00       	jmp    8010507c <getprocs+0xd9>
@@ -10244,11 +10243,11 @@ getprocs(int max, struct uproc *table)
 8010506d:	83 45 0c 38          	addl   $0x38,0xc(%ebp)
         pcount += 1;
 80105071:	83 45 f0 01          	addl   $0x1,-0x10(%ebp)
-
-//    if(max > 64) 
-//        return -1; 
+    struct proc *p;
+    int pcount;
 
     pcount = 0;
+    //acquire(&ptable.lock);
     for(p = ptable.proc; p < &ptable.proc[max]; p++) {
 80105075:	81 45 f4 90 00 00 00 	addl   $0x90,-0xc(%ebp)
 8010507c:	8b 55 08             	mov    0x8(%ebp),%edx
@@ -10261,10 +10260,10 @@ getprocs(int max, struct uproc *table)
 80105091:	83 c0 04             	add    $0x4,%eax
 80105094:	3b 45 f4             	cmp    -0xc(%ebp),%eax
 80105097:	0f 87 1f ff ff ff    	ja     80104fbc <getprocs+0x19>
-        safestrcpy(table->name, p->name, sizeof(p->name));
         table += 1;
         pcount += 1;
     }
+    //release(&ptable.lock);
         
     return pcount;
 8010509d:	8b 45 f0             	mov    -0x10(%ebp),%eax
