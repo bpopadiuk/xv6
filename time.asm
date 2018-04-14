@@ -5,9 +5,9 @@ _time:     file format elf32-i386
 Disassembly of section .text:
 
 00000000 <print_ticks_as_seconds>:
-#include "types.h"
-#include "user.h"
-
+/**  
+* parse milliseconds and print as seconds in floating point format
+*/
 void
 print_ticks_as_seconds(uint milliseconds)
 {
@@ -39,6 +39,7 @@ print_ticks_as_seconds(uint milliseconds)
   41:	6a 01                	push   $0x1
   43:	e8 49 06 00 00       	call   691 <printf>
   48:	83 c4 10             	add    $0x10,%esp
+
   if(fractional_part < 10) 
   4b:	83 7d f0 09          	cmpl   $0x9,-0x10(%ebp)
   4f:	77 14                	ja     65 <print_ticks_as_seconds+0x65>
@@ -58,6 +59,7 @@ print_ticks_as_seconds(uint milliseconds)
   73:	6a 01                	push   $0x1
   75:	e8 17 06 00 00       	call   691 <printf>
   7a:	83 c4 10             	add    $0x10,%esp
+
   printf(1, "%d", fractional_part);
   7d:	83 ec 04             	sub    $0x4,%esp
   80:	ff 75 f0             	pushl  -0x10(%ebp)
@@ -88,7 +90,7 @@ main(int argc, char *argv[])
     uint t1, t2;
     uint running_time;
 
-    if(argc < 2) {
+    if(argc < 2) { // if no arguments passed, print "ran in 0.000 seconds." and exit
   a9:	83 3b 01             	cmpl   $0x1,(%ebx)
   ac:	7f 3e                	jg     ec <main+0x57>
         running_time = 0;
@@ -117,7 +119,7 @@ main(int argc, char *argv[])
     ret = fork();
   ec:	e8 e1 03 00 00       	call   4d2 <fork>
   f1:	89 45 f4             	mov    %eax,-0xc(%ebp)
-    if(ret == 0) {
+    if(ret == 0) { // run the program passed to time in child process
   f4:	83 7d f4 00          	cmpl   $0x0,-0xc(%ebp)
   f8:	75 3b                	jne    135 <main+0xa0>
         exec(argv[1], &argv[1]);
@@ -144,7 +146,7 @@ main(int argc, char *argv[])
         exit();
  130:	e8 a5 03 00 00       	call   4da <exit>
 
-    } else if(ret == -1) {
+    } else if(ret == -1) { // handle fork() failure
  135:	83 7d f4 ff          	cmpl   $0xffffffff,-0xc(%ebp)
  139:	75 17                	jne    152 <main+0xbd>
         printf(2, "ERROR: fork failed\n");
@@ -156,7 +158,7 @@ main(int argc, char *argv[])
         exit();
  14d:	e8 88 03 00 00       	call   4da <exit>
 
-    } else {
+    } else { // reap child process and store its running time to running_time
         t1 = uptime();
  152:	e8 1b 04 00 00       	call   572 <uptime>
  157:	89 45 f0             	mov    %eax,-0x10(%ebp)

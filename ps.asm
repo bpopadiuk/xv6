@@ -5,7 +5,7 @@ _ps:     file format elf32-i386
 Disassembly of section .text:
 
 00000000 <print_ticks_as_seconds>:
-#define MAX 64
+#define MAX 72 
 #define PSHEADER "\nPID\tUID\tGID\tPPID\tELAPSED\tCPU\tSTATE\tSIZE\tNAME\n"
 
 void
@@ -39,6 +39,7 @@ print_ticks_as_seconds(uint milliseconds)
   41:	6a 01                	push   $0x1
   43:	e8 09 07 00 00       	call   751 <printf>
   48:	83 c4 10             	add    $0x10,%esp
+
   if(fractional_part < 10) 
   4b:	83 7d f0 09          	cmpl   $0x9,-0x10(%ebp)
   4f:	77 14                	ja     65 <print_ticks_as_seconds+0x65>
@@ -58,6 +59,7 @@ print_ticks_as_seconds(uint milliseconds)
   73:	6a 01                	push   $0x1
   75:	e8 d7 06 00 00       	call   751 <printf>
   7a:	83 c4 10             	add    $0x10,%esp
+
   printf(1, "%d", fractional_part);
   7d:	83 ec 04             	sub    $0x4,%esp
   80:	ff 75 f0             	pushl  -0x10(%ebp)
@@ -88,16 +90,16 @@ main(void)
     int nprocesses;
     struct uproc *table;
 
-    table = malloc(sizeof(struct uproc) * MAX);
+    table = malloc(sizeof(struct uproc) * MAX); // allocate memory for uproc table
   a8:	83 ec 0c             	sub    $0xc,%esp
-  ab:	68 00 0e 00 00       	push   $0xe00
+  ab:	68 c0 0f 00 00       	push   $0xfc0
   b0:	e8 6f 09 00 00       	call   a24 <malloc>
   b5:	83 c4 10             	add    $0x10,%esp
   b8:	89 45 e0             	mov    %eax,-0x20(%ebp)
-    nprocesses = getprocs(MAX, &table[0]);
+    nprocesses = getprocs(MAX, &table[0]); // nprocesses holds size of uproc table or -1 for error
   bb:	83 ec 08             	sub    $0x8,%esp
   be:	ff 75 e0             	pushl  -0x20(%ebp)
-  c1:	6a 40                	push   $0x40
+  c1:	6a 48                	push   $0x48
   c3:	e8 aa 05 00 00       	call   672 <getprocs>
   c8:	83 c4 10             	add    $0x10,%esp
   cb:	89 45 dc             	mov    %eax,-0x24(%ebp)
@@ -122,7 +124,7 @@ main(void)
   f5:	e8 57 06 00 00       	call   751 <printf>
   fa:	83 c4 10             	add    $0x10,%esp
 
-    for(i = 0; i < nprocesses; i++) {
+    for(i = 0; i < nprocesses; i++) { // copy uproc info from ptable
   fd:	c7 45 e4 00 00 00 00 	movl   $0x0,-0x1c(%ebp)
  104:	e9 45 01 00 00       	jmp    24e <main+0x1b9>
         if(table[i].pid == 0)
@@ -239,7 +241,7 @@ main(void)
 
     printf(1, PSHEADER);    
 
-    for(i = 0; i < nprocesses; i++) {
+    for(i = 0; i < nprocesses; i++) { // copy uproc info from ptable
  24a:	83 45 e4 01          	addl   $0x1,-0x1c(%ebp)
  24e:	8b 45 e4             	mov    -0x1c(%ebp),%eax
  251:	3b 45 dc             	cmp    -0x24(%ebp),%eax

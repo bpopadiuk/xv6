@@ -3,7 +3,7 @@
 #include "user.h"
 #include "uproc.h"
 
-#define MAX 64
+#define MAX 72 
 #define PSHEADER "\nPID\tUID\tGID\tPPID\tELAPSED\tCPU\tSTATE\tSIZE\tNAME\n"
 
 void
