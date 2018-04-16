@@ -332,7 +332,7 @@ testtime(void){
 
   arg2[0] = malloc(sizeof(char) * 5);
   strcpy(arg2[0], "time");
-  arg2[1] = malloc(sizeof(char) * 4);
+  arg2[1] = malloc(sizeof(char) * 5);
   strcpy(arg2[1], "abc"); 
 
   arg3[0] = malloc(sizeof(char) * 5);
@@ -356,6 +356,15 @@ testtime(void){
   testtimewitharg(arg1);
   printf(1,"\n%s %s\n", arg2[0], arg2[1]);
   testtimewitharg(arg2);
+
+/*  char **myarg = malloc(sizeof(char *)*2);
+  myarg[0] = malloc(sizeof(char)*5);
+  myarg[1] = malloc(sizeof(char)*5);
+  strcpy(myarg[0], "time");
+  strcpy(myarg[1], "date");
+  printf(1, "here's boris:\n");
+  testtimewitharg(myarg); */
+
   printf(1,"\n%s %s\n", arg3[0], arg3[1]);
   testtimewitharg(arg3);
   printf(1,"\n%s %s %s %s\n", arg4[0], arg4[1], arg4[2], arg4[3]);

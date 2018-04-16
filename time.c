@@ -50,13 +50,11 @@ main(int argc, char *argv[])
         wait();
         t2 = uptime();
         running_time = t2 - t1;
+        printf(1, "%s ran in ", argv[1]);
+        print_ticks_as_seconds(running_time);
+        printf(1, " seconds.\n");    
+        exit();
     }
-
-    printf(1, "%s ran in ", argv[1]);
-    print_ticks_as_seconds(running_time);
-    printf(1, " seconds.\n");            
-    exit();
-    
 }
 
 #endif
