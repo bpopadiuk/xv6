@@ -333,7 +333,7 @@ testtime(void){
   arg2[0] = malloc(sizeof(char) * 5);
   strcpy(arg2[0], "time");
   arg2[1] = malloc(sizeof(char) * 4);
-  strcpy(arg2[1], "abc");
+  strcpy(arg2[1], "abc"); 
 
   arg3[0] = malloc(sizeof(char) * 5);
   strcpy(arg3[0], "time");

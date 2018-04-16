@@ -116,52 +116,52 @@ main(int argc, char *argv[])
   e7:	e8 ee 03 00 00       	call   4da <exit>
     }
 
-    ret = fork();
-  ec:	e8 e1 03 00 00       	call   4d2 <fork>
+    t1 = uptime();
+  ec:	e8 81 04 00 00       	call   572 <uptime>
   f1:	89 45 f4             	mov    %eax,-0xc(%ebp)
+    ret = fork();
+  f4:	e8 d9 03 00 00       	call   4d2 <fork>
+  f9:	89 45 f0             	mov    %eax,-0x10(%ebp)
     if(ret == 0) { // run the program passed to time in child process
-  f4:	83 7d f4 00          	cmpl   $0x0,-0xc(%ebp)
-  f8:	75 3b                	jne    135 <main+0xa0>
+  fc:	83 7d f0 00          	cmpl   $0x0,-0x10(%ebp)
+ 100:	75 3b                	jne    13d <main+0xa8>
         exec(argv[1], &argv[1]);
-  fa:	8b 43 04             	mov    0x4(%ebx),%eax
-  fd:	8d 50 04             	lea    0x4(%eax),%edx
- 100:	8b 43 04             	mov    0x4(%ebx),%eax
- 103:	83 c0 04             	add    $0x4,%eax
- 106:	8b 00                	mov    (%eax),%eax
- 108:	83 ec 08             	sub    $0x8,%esp
- 10b:	52                   	push   %edx
- 10c:	50                   	push   %eax
- 10d:	e8 00 04 00 00       	call   512 <exec>
- 112:	83 c4 10             	add    $0x10,%esp
+ 102:	8b 43 04             	mov    0x4(%ebx),%eax
+ 105:	8d 50 04             	lea    0x4(%eax),%edx
+ 108:	8b 43 04             	mov    0x4(%ebx),%eax
+ 10b:	83 c0 04             	add    $0x4,%eax
+ 10e:	8b 00                	mov    (%eax),%eax
+ 110:	83 ec 08             	sub    $0x8,%esp
+ 113:	52                   	push   %edx
+ 114:	50                   	push   %eax
+ 115:	e8 f8 03 00 00       	call   512 <exec>
+ 11a:	83 c4 10             	add    $0x10,%esp
         printf(2, "ERROR: exec failed to execute %s\n", argv[1]);
- 115:	8b 43 04             	mov    0x4(%ebx),%eax
- 118:	83 c0 04             	add    $0x4,%eax
- 11b:	8b 00                	mov    (%eax),%eax
- 11d:	83 ec 04             	sub    $0x4,%esp
- 120:	50                   	push   %eax
- 121:	68 68 0a 00 00       	push   $0xa68
- 126:	6a 02                	push   $0x2
- 128:	e8 64 05 00 00       	call   691 <printf>
- 12d:	83 c4 10             	add    $0x10,%esp
+ 11d:	8b 43 04             	mov    0x4(%ebx),%eax
+ 120:	83 c0 04             	add    $0x4,%eax
+ 123:	8b 00                	mov    (%eax),%eax
+ 125:	83 ec 04             	sub    $0x4,%esp
+ 128:	50                   	push   %eax
+ 129:	68 68 0a 00 00       	push   $0xa68
+ 12e:	6a 02                	push   $0x2
+ 130:	e8 5c 05 00 00       	call   691 <printf>
+ 135:	83 c4 10             	add    $0x10,%esp
         exit();
- 130:	e8 a5 03 00 00       	call   4da <exit>
+ 138:	e8 9d 03 00 00       	call   4da <exit>
 
     } else if(ret == -1) { // handle fork() failure
- 135:	83 7d f4 ff          	cmpl   $0xffffffff,-0xc(%ebp)
- 139:	75 17                	jne    152 <main+0xbd>
+ 13d:	83 7d f0 ff          	cmpl   $0xffffffff,-0x10(%ebp)
+ 141:	75 17                	jne    15a <main+0xc5>
         printf(2, "ERROR: fork failed\n");
- 13b:	83 ec 08             	sub    $0x8,%esp
- 13e:	68 8a 0a 00 00       	push   $0xa8a
- 143:	6a 02                	push   $0x2
- 145:	e8 47 05 00 00       	call   691 <printf>
- 14a:	83 c4 10             	add    $0x10,%esp
+ 143:	83 ec 08             	sub    $0x8,%esp
+ 146:	68 8a 0a 00 00       	push   $0xa8a
+ 14b:	6a 02                	push   $0x2
+ 14d:	e8 3f 05 00 00       	call   691 <printf>
+ 152:	83 c4 10             	add    $0x10,%esp
         exit();
- 14d:	e8 88 03 00 00       	call   4da <exit>
+ 155:	e8 80 03 00 00       	call   4da <exit>
 
     } else { // reap child process and store its running time to running_time
-        t1 = uptime();
- 152:	e8 1b 04 00 00       	call   572 <uptime>
- 157:	89 45 f0             	mov    %eax,-0x10(%ebp)
         wait();
  15a:	e8 83 03 00 00       	call   4e2 <wait>
         t2 = uptime();
@@ -169,7 +169,7 @@ main(int argc, char *argv[])
  164:	89 45 ec             	mov    %eax,-0x14(%ebp)
         running_time = t2 - t1;
  167:	8b 45 ec             	mov    -0x14(%ebp),%eax
- 16a:	2b 45 f0             	sub    -0x10(%ebp),%eax
+ 16a:	2b 45 f4             	sub    -0xc(%ebp),%eax
  16d:	89 45 e8             	mov    %eax,-0x18(%ebp)
     }
 

@@ -4,7 +4,7 @@
 #include "uproc.h"
 
 #define MAX 72 
-#define PSHEADER "\nPID\tUID\tGID\tPPID\tELAPSED\tCPU\tSTATE\tSIZE\tNAME\n"
+#define PSHEADER "\nPID\tUID\tGID\tPPID\tElapsed\tCPU\tState\tSize\tName\n"
 
 void
 print_ticks_as_seconds(uint milliseconds)

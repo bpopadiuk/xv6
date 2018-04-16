@@ -539,7 +539,7 @@ getprocs(int max, struct uproc *table)
 
     pcount = 0;
     max = (max < NPROC) ? max : NPROC;
-    //acquire(&ptable.lock);
+    acquire(&ptable.lock);
     for(p = ptable.proc; p < &ptable.proc[max]; p++) {
         table->pid = p->pid;
         table->uid = p->uid;
@@ -553,7 +553,7 @@ getprocs(int max, struct uproc *table)
         table += 1;
         pcount += 1;
     }
-    //release(&ptable.lock);
+    release(&ptable.lock);
         
     return pcount;
 }    

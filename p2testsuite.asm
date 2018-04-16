@@ -1187,7 +1187,7 @@ testtime(void){
      a57:	e8 05 0b 00 00       	call   1561 <malloc>
      a5c:	83 c4 10             	add    $0x10,%esp
      a5f:	89 03                	mov    %eax,(%ebx)
-  strcpy(arg2[1], "abc");
+  strcpy(arg2[1], "abc"); 
      a61:	8b 45 f0             	mov    -0x10(%ebp),%eax
      a64:	83 c0 04             	add    $0x4,%eax
      a67:	8b 00                	mov    (%eax),%eax

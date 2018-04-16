@@ -35,6 +35,7 @@ main(int argc, char *argv[])
         exit();
     }
 
+    t1 = uptime();
     ret = fork();
     if(ret == 0) { // run the program passed to time in child process
         exec(argv[1], &argv[1]);
@@ -46,7 +47,6 @@ main(int argc, char *argv[])
         exit();
 
     } else { // reap child process and store its running time to running_time
-        t1 = uptime();
         wait();
         t2 = uptime();
         running_time = t2 - t1;
