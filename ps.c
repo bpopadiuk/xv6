@@ -3,7 +3,7 @@
 #include "user.h"
 #include "uproc.h"
 
-#define MAX 72 
+#define MAX 64 
 #define PSHEADER "\nPID\tUID\tGID\tPPID\tElapsed\tCPU\tState\tSize\tName\n"
 
 void
@@ -38,7 +38,7 @@ main(void)
 
     printf(1, PSHEADER);    
 
-    for(i = 0; i < nprocesses; i++) { // copy uproc info from ptable
+    for(i = 0; i < nprocesses; i++) { // print uproc table
         if(table[i].pid == 0)
             break;
         printf(1, "%d\t%d\t%d\t%d\t", table[i].pid, table[i].uid, table[i].gid, table[i].ppid);

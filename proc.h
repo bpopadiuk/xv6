@@ -70,10 +70,10 @@ struct proc {
   uint start_ticks;            // Time stamp marking time of process initiation
   #endif
   #ifdef CS333_P2
-  uint uid;
-  uint gid;
-  uint cpu_ticks_total;
-  uint cpu_ticks_in;
+  uint uid;                    // Process User ID
+  uint gid;                    // Process Group ID
+  uint cpu_ticks_total;        // Process CPU time
+  uint cpu_ticks_in;           // Time stamp marking each time the process is scheduled
   #endif
 };
 

@@ -92,3 +92,5 @@ testsetuid.c
 testSched.c
 p2testsuite.c
 uproc.h
+testuidgid.c
+ps-test.c

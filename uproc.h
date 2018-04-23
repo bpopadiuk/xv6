@@ -1,3 +1,6 @@
+#ifdef CS333_P2
+#define STRMAX 32
+
 struct uproc {
     uint pid;
     uint uid;
@@ -5,7 +8,8 @@ struct uproc {
     uint ppid;
     uint elapsed;
     uint cpu_ticks_total;
-    char state[10];
+    char state[STRMAX];
     uint sz;
-    char name[16];
+    char name[STRMAX];
 };
+#endif

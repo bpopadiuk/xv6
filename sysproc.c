@@ -6,7 +6,10 @@
 #include "memlayout.h"
 #include "mmu.h"
 #include "proc.h"
+
+#ifdef CS333_P2
 #include "uproc.h"
+#endif
 
 int
 sys_fork(void)

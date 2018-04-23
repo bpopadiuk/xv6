@@ -24,14 +24,20 @@ testppid(void){
   int ret, pid, ppid;
 
   printf(1, "\n----------\nRunning PPID Test\n----------\n");
+  ppid = getppid();
+  printf(1, "Initial PPID is: %d. Press control-p, PPID should match PID of sh.\n", ppid);
+  sleep(5 * TPS);
+
   pid = getpid();
+  printf(1, "Process PID: %d\n", pid);
   ret = fork();
   if(ret == 0){
     ppid = getppid();
     if(ppid != pid)
       printf(2, "FAILED: Parent PID is %d, Child's PPID is %d\n", pid, ppid);
     else
-      printf(1, "** Test passed! **\n");
+      printf(1, "Child process PPID, acquired from fork() (should match PID above): %d\n", ppid);
+      printf(1, "** All tests passed! ** \n");
     exit();
   }
   else
@@ -46,11 +52,13 @@ testgid(uint new_val, uint expected_get_val, int expected_set_ret){
 
   pre_gid = getgid();
   ret = setgid(new_val);
+  printf(1, "Return: %d\n", ret);
   if((ret < 0 && expected_set_ret >= 0) || (ret >= 0 && expected_set_ret < 0)){
     printf(2, "FAILED: setgid(%d) returned %d, expected %d\n", new_val, ret, expected_set_ret);
     success = -1;
   }
   post_gid = getgid();
+  printf(1, "New GID: %d\n\n", post_gid);
   if(post_gid != expected_get_val){
     printf(2, "FAILED: UID was %d. After setgid(%d), getgid() returned %d, expected %d\n", 
           pre_gid, new_val, post_gid, expected_get_val);
@@ -67,11 +75,13 @@ testuid(uint new_val, uint expected_get_val, int expected_set_ret){
 
   pre_uid = getuid();
   ret = setuid(new_val);
+  printf(1, "Return: %d\n", ret);
   if((ret < 0 && expected_set_ret >= 0) || (ret >= 0 && expected_set_ret < 0)){
     printf(2, "FAILED: setuid(%d) returned %d, expected %d\n", new_val, ret, expected_set_ret);
     success = -1;
   }
   post_uid = getuid();
+  printf(1, "New UID: %d\n\n", post_uid);
   if(post_uid != expected_get_val){
     printf(2, "FAILED: UID was %d. After setuid(%d), getuid() returned %d, expected %d\n", 
           pre_uid, new_val, post_uid, expected_get_val);
@@ -92,14 +102,19 @@ testuidgid(void)
     printf(1, "FAILED: Default UID %d, out of range\n", uid);
     success = -1;
   }
+  printf(1, "Setting UID to 0, expected return is 0, expected new UID is 0:\n");
   if (testuid(0, 0, 0))
     success = -1;
+  printf(1, "Setting UID to 5, expected return is 0, expected new UID is 5:\n");
   if (testuid(5, 5, 0))
     success = -1;
+  printf(1, "Setting UID to 32767, expected return is 0, expected new UID is 32767:\n");
   if (testuid(32767, 32767, 0))
     success = -1;
+  printf(1, "Setting UID to 32768 (out of range), expected return is -1, expected new UID is 32767:\n");
   if (testuid(32768, 32767, -1))
     success = -1;
+  printf(1, "Setting UID to -1 (out of range), expected return is -1, expected new UID is 32767:\n");
   if (testuid(-1, 32767, -1))
     success = -1;
  
@@ -108,14 +123,19 @@ testuidgid(void)
     printf(1, "FAILED: Default GID %d, out of range\n", gid);
     success = -1;
   }
+  printf(1, "Setting GID to 0, expected return is 0, expected new GID is 0:\n");
   if (testgid(0, 0, 0))
     success = -1;
+  printf(1, "Setting GID to 5, expected return is 0, expected new GID is 5:\n");
   if (testgid(5, 5, 0))
     success = -1;
+  printf(1, "Setting GID to 32767, expected return is 0, expected new GID is 32767:\n");
   if (testgid(32767, 32767, 0))
     success = -1;
+  printf(1, "Setting GID to -1 (out of range), expected return is -1, expected new GID is 32767:\n");
   if (testgid(-1, 32767, -1))
     success = -1;
+  printf(1, "Setting GID to 32768 (out of range), expected return is -1, expected new GID is 32767:\n");
   if (testgid(32768, 32767, -1))
     success = -1;
  
@@ -140,6 +160,8 @@ testuidgidinheritance(void){
   if(ret == 0){
     uid = getuid();
     gid = getgid();
+    printf(1, "UID (should be 12345): %d\n", uid);
+    printf(1, "GID (should be 12345: %d\n", gid);
     if(uid != 12345){
       printf(2, "FAILED: Parent UID is 12345, child UID is %d\n", uid);
     }
@@ -335,10 +357,15 @@ testtime(void){
   arg2[1] = malloc(sizeof(char) * 5);
   strcpy(arg2[1], "abc"); 
 
-  arg3[0] = malloc(sizeof(char) * 5);
+  arg3[0] = malloc(sizeof(char) * 5); 
   strcpy(arg3[0], "time");
-  arg3[1] = malloc(sizeof(char) * 5);
+  arg3[1] = malloc(sizeof(char) * 5); 
   strcpy(arg3[1], "date");
+
+//  arg3[0] = malloc(sizeof(char) * 5);
+//  strcpy(arg3[0], "time");
+//  arg3[1] = malloc(sizeof(char) * 5);
+//  strcpy(arg3[1], "ps");
 
   arg4[0] = malloc(sizeof(char) * 5);
   strcpy(arg4[0], "time");
@@ -356,14 +383,6 @@ testtime(void){
   testtimewitharg(arg1);
   printf(1,"\n%s %s\n", arg2[0], arg2[1]);
   testtimewitharg(arg2);
-
-/*  char **myarg = malloc(sizeof(char *)*2);
-  myarg[0] = malloc(sizeof(char)*5);
-  myarg[1] = malloc(sizeof(char)*5);
-  strcpy(myarg[0], "time");
-  strcpy(myarg[1], "date");
-  printf(1, "here's boris:\n");
-  testtimewitharg(myarg); */
 
   printf(1,"\n%s %s\n", arg3[0], arg3[1]);
   testtimewitharg(arg3);
