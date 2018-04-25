@@ -11,9 +11,29 @@
 #include "uproc.h"
 #endif
 
+#ifdef CS333_P3P4
+struct StateLists {
+    struct proc* ready;
+    struct proc* readyTail;
+    struct proc* free;
+    struct proc* freeTail;
+    struct proc* sleep;
+    struct proc* sleepTail;
+    struct proc* zombie;
+    struct proc* zombieTail;
+    struct proc* running;
+    struct proc* runningTail;
+    struct proc* embryo;
+    struct proc* embryoTail;
+};
+#endif
+
 struct {
   struct spinlock lock;
   struct proc proc[NPROC];
+  #ifdef CS333_P3P4
+  struct StateLists pLists;
+  #endif
 } ptable;
 
 static struct proc *initproc;
@@ -101,6 +121,13 @@ userinit(void)
   struct proc *p;
   extern char _binary_initcode_start[], _binary_initcode_size[];
 
+  #ifdef CS333_P3P4
+  acquire(&ptable.lock);
+  initProcessLists();
+  initFreeList();
+  release(&ptable.lock);  
+  #endif
+
   p = allocproc();
   initproc = p;
   if((p->pgdir = setupkvm()) == 0)
@@ -126,6 +153,10 @@ userinit(void)
   p->cwd = namei("/");
 
   p->state = RUNNABLE;
+  #ifdef CS333_P3P4
+  ptable.pLists.ready = p;
+  p->next = 0;
+  #endif
 }
 
 // Grow current process's memory by n bytes.
