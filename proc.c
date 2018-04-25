@@ -120,9 +120,6 @@ userinit(void)
   // Set default UID and GID
   p->uid = UID_DEFAULT;
   p->gid = GID_DEFAULT;
-
-  // Point Process 1's parent pointer to itself
-  p->parent = p;
   #endif
 
   safestrcpy(p->name, "initcode", sizeof(p->name));
@@ -548,7 +545,10 @@ getprocs(int max, struct uproc *table)
         table->pid = p->pid;
         table->uid = p->uid;
         table->gid = p->gid;
-        table->ppid = p->parent->pid;
+        if(p->pid == 1)
+            table->ppid = p->pid;
+        else
+            table->ppid = p->parent->pid;
         table->elapsed = ticks - p->start_ticks;
         table->cpu_ticks_total = p->cpu_ticks_total;
         safestrcpy(table->state, states[p->state], 7);
@@ -601,7 +601,8 @@ procdumpP2(struct proc *p, char *state)
   uint elapsed = ticks - p->start_ticks;
 
 
-  cprintf("%d\t%s\t\t%d\t%d\t%d\t", p->pid, p->name, p->uid, p->gid, p->parent->pid);
+  cprintf("%d\t%s\t\t%d\t%d\t", p->pid, p->name, p->uid, p->gid);
+  cprintf("%d\t", p->parent ? p->parent->pid : p->pid);
   print_ticks_as_seconds(elapsed);
   cprintf("\t");
   print_ticks_as_seconds(p->cpu_ticks_total);
@@ -630,7 +631,6 @@ procdump(void)
 
   cprintf(HEADER);
 
-//  acquire(&ptable.lock);
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->state == UNUSED)
       continue;
@@ -652,7 +652,6 @@ procdump(void)
     }
     cprintf("\n");
   }
-//  release(&ptable.lock);
 }
 
 #ifdef CS333_P3P4
