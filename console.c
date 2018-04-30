@@ -189,7 +189,12 @@ struct {
 void
 consoleintr(int (*getc)(void))
 {
-  int c, doprocdump = 0, dofreedump = 0;
+  int c;
+  int doprocdump = 0;
+  int dofreedump = 0;
+  int doreadydump = 0;
+  int dosleepdump = 0;
+  int dozombiedump = 0;
 
   acquire(&cons.lock);
   while((c = getc()) >= 0){
@@ -197,11 +202,20 @@ consoleintr(int (*getc)(void))
     case C('P'):  // Process listing.
       doprocdump = 1;   // procdump() locks cons.lock indirectly; invoke later
       break;
+    #ifdef CS333_P3P4
     case C('R'):  // Ready list
-      break;
+      doreadydump = 1;  // invoke later
+      break;     
     case C('F'):
       dofreedump = 1;   // invoke later
       break;
+    case C('S'):
+      dosleepdump = 1;
+      break;
+    case C('Z'):
+      dozombiedump = 1;
+      break;
+    #endif
     case C('U'):  // Kill line.
       while(input.e != input.w &&
             input.buf[(input.e-1) % INPUT_BUF] != '\n'){
@@ -234,6 +248,15 @@ consoleintr(int (*getc)(void))
   }
   if(dofreedump) {
     freedump();  // now call freedump()
+  }
+  if(doreadydump) {
+    readydump(); // now call readydump()
+  }
+  if(dosleepdump) {
+    sleepdump();
+  }
+  if(dozombiedump) {
+    zombiedump();
   }
 }
 

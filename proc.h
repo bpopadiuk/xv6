@@ -75,6 +75,9 @@ struct proc {
   uint cpu_ticks_total;        // Process CPU time
   uint cpu_ticks_in;           // Time stamp marking each time the process is scheduled
   #endif
+  #ifdef CS333_P3P4
+  struct proc* next;
+  #endif
 };
 
 // Process memory is laid out contiguously, low addresses first:

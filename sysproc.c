@@ -127,7 +127,7 @@ sys_getgid(void)
 int
 sys_getppid(void)
 {
-    return proc->parent->pid;
+    return proc->parent ? proc->parent->pid : proc->pid;
 }
 
 int
