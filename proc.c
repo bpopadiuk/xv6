@@ -50,16 +50,7 @@ static void initProcessLists(void);
 static void initFreeList(void);
 static int stateListAdd(struct proc** head, struct proc** tail, struct proc* p);
 static int stateListRemove(struct proc** head, struct proc** tail, struct proc* p);
-#endif
-
-// Helper function to double check process state before removing from list
-#ifdef CS333_P3P4
-static void assertState(struct proc* p, enum procstate state) {
-    if(p->state != state) {
-        cprintf("expected %d, got %d\n", state, p->state);
-        panic("process list/state mismatch");
-    }
-}
+static void assertState(struct proc* p, enum procstate state);
 #endif
 
 void
@@ -583,51 +574,48 @@ scheduler(void)
 }
 
 #else
+// P4 Improved Scheduler. Uses Ready List to find process 
+// instead of looping through ptable.
 void
 scheduler(void)
 {
     struct proc *p; 
-    int idle;  // for checking if processor is idle
 
     for(;;){
       
       // Enable interrupts on this processor.
       sti();
 
-      idle = 1;  // assume idle unless we schedule a process
       // Loop over process table looking for process to run.
       acquire(&ptable.lock);
-      for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-        if(p->state != RUNNABLE)
-          continue;
-        // Switch to chosen process.  It is the process's job
-        // to release ptable.lock and then reacquire it
-        // before jumping back to us.
-        idle = 0;  // not idle this timeslice
-        proc = p;
-        switchuvm(p);
-        if(stateListRemove(&ptable.pLists.ready, &ptable.pLists.readyTail, p) < 0)
-          panic("stateListRemove() failed to remove p from ready list in scheduler()");
-        assertState(p, RUNNABLE);
-        p->state = RUNNING;
-        stateListAdd(&ptable.pLists.running, &ptable.pLists.runningTail, p);
-        #ifdef CS333_P2
-        p->cpu_ticks_in = ticks;
-        #endif
-        swtch(&cpu->scheduler, proc->context);
-        switchkvm();
+      if(!ptable.pLists.ready) {  // no ready processes, release ptable lock and idle
+        release(&ptable.lock);
+        sti();
+        hlt();
+        continue;
+      }
+      // Switch to chosen process.  It is the process's job
+      // to release ptable.lock and then reacquire it
+      // before jumping back to us.
+      p = ptable.pLists.ready;
+      proc = p;
+      switchuvm(p);
+      if(stateListRemove(&ptable.pLists.ready, &ptable.pLists.readyTail, p) < 0)
+        panic("stateListRemove() failed to remove p from ready list in scheduler()");
+      assertState(p, RUNNABLE);
+      p->state = RUNNING;
+      stateListAdd(&ptable.pLists.running, &ptable.pLists.runningTail, p);
+      #ifdef CS333_P2
+      p->cpu_ticks_in = ticks;
+      #endif
+      swtch(&cpu->scheduler, proc->context);
+      switchkvm();
 
-        // Process is done running for now.
-        // It should have changed its p->state before coming back.
-        proc = 0;
-    }   
-    release(&ptable.lock);
-    // if idle, wait for next interrupt
-    if (idle) {
-      sti();
-      hlt();
+      // Process is done running for now.
+      // It should have changed its p->state before coming back.
+      proc = 0;
+      release(&ptable.lock);
     }
-  }
 }
 #endif
 
@@ -1143,5 +1131,15 @@ initFreeList(void) {
     p->state = UNUSED;
     stateListAdd(&ptable.pLists.free, &ptable.pLists.freeTail, p);
   }
+}
+#endif
+
+// Helper function to double check process state before removing from list
+#ifdef CS333_P3P4
+static void assertState(struct proc* p, enum procstate state) {
+    if(p->state != state) {
+        cprintf("expected %d, got %d\n", state, p->state);
+        panic("process list/state mismatch");
+    }    
 }
 #endif
