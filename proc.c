@@ -463,6 +463,28 @@ wait(void)
       if(p->state == ZOMBIE){
       */  // Found one.
 
+    p = ptable.pLists.zombie;
+    while(p) {
+        if(p->parent == proc) {
+            pid = p->pid;
+            kfree(p->kstack);
+            p->kstack = 0; 
+            freevm(p->pgdir);
+            if(stateListRemove(&ptable.pLists.zombie, &ptable.pLists.zombieTail, p) < 0) 
+                panic("stateListRemove() failed to remove p from zombie list in wait()");
+            assertState(p, ZOMBIE);
+            p->state = UNUSED;
+            stateListAdd(&ptable.pLists.free, &ptable.pLists.freeTail, p);
+            p->pid = 0; 
+            p->parent = 0; 
+            p->name[0] = 0; 
+            p->killed = 0; 
+            release(&ptable.lock);
+            return pid; 
+        }    
+        p = p->next;
+    }    
+
     p = ptable.pLists.running;
     while(p) {
         if(p->parent == proc)
@@ -483,30 +505,6 @@ wait(void)
             havekids = 1;
         p = p->next;
     }
-
-    p = ptable.pLists.zombie;
-    while(p) {
-        if(p->parent == proc) {
-            pid = p->pid;
-            kfree(p->kstack);
-            p->kstack = 0;
-            freevm(p->pgdir);
-            if(stateListRemove(&ptable.pLists.zombie, &ptable.pLists.zombieTail, p) < 0)
-                panic("stateListRemove() failed to remove p from zombie list in wait()");
-            assertState(p, ZOMBIE);
-            p->state = UNUSED;
-            stateListAdd(&ptable.pLists.free, &ptable.pLists.freeTail, p);
-            p->pid = 0;
-            p->parent = 0;
-            p->name[0] = 0;
-            p->killed = 0;
-            release(&ptable.lock);
-            return pid;
-        }
-        p = p->next;
-    }
-  
-
 
     // No point waiting if we don't have any children.
     if(!havekids || proc->killed){
@@ -795,6 +793,10 @@ kill(int pid)
 
   acquire(&ptable.lock); 
 
+  // Look through each list for process we're looking for. Shortest lists
+  // first for efficiency
+
+  // Look through running list
   p = ptable.pLists.running;
   while(p) {
     if(p->pid == pid) {
@@ -805,6 +807,7 @@ kill(int pid)
     p = p->next;
   }
 
+  // Look through ready list 
   p = ptable.pLists.ready;
   while(p) {
     if(p->pid == pid) {
@@ -815,6 +818,7 @@ kill(int pid)
     p = p->next;
   }
 
+  // Look through sleep list
   p = ptable.pLists.sleep;
   while(p) {
     if(p->pid == pid) {
@@ -831,6 +835,7 @@ kill(int pid)
     p = p->next;
   }
 
+  // Look through zombie list
   p = ptable.pLists.zombie;
   while(p) {
     if(p->pid == pid) {
@@ -913,10 +918,10 @@ readydump(void) {
 void
 freedump(void) {
     struct proc* p;
-    int pcount = 1;
+    int pcount = 0;
 
     p = ptable.pLists.free;
-    while(p->next != 0) {
+    while(p) {
         pcount += 1;
         p = p->next;
     }
