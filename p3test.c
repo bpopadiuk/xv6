@@ -41,16 +41,16 @@ zombiefree(void) {
         kill(pids[i]);
         printf(1, "killing PID %d\n", pids[i]);
         
-        // Check that the first 5 processes were added to Zombie List
-        if(i < 5) {
+        // Check that the first 3 processes were added to Zombie List
+        if(i < 3) {
             printf(1, "\nPRESS CTRL-Z ((%d, 3) should be on Zombie List)\n", pids[i]);
             sleep(5 * TPS);
         }
         
         while(1) {
             if(wait() != -1) {
-                // Check that the first 5 processes were added to Free List
-                if(i < 5) {
+                // Check that the first 3 processes were added to Free List
+                if(i < 3) {
                     printf(1, "\nPRESS CTRL-F (Free List should = %d)\n", (i + 1));
                     sleep(5 * TPS);
                 }
@@ -58,8 +58,6 @@ zombiefree(void) {
             }
         }
     }
-
-   // printf(1, "TEST PASSED\n");
 
     return 0;
 }
@@ -70,31 +68,23 @@ int
 ready(void) {
     int i = 0;
     int pid;
-    int pids[10];
         
-    printf(1, "forking... this may take a minute\n");
+    printf(1, "forking first process...\n");
 
-    // Fork 10 processes
-    while((pid = fork()) > 0 && i < 10) {
-        pids[i] = pid;
+    // Fork 10 processes (i < 9 because fork() still executes when the while condition fails)
+    while((pid = fork()) > 0 && i < 9) {
         i += 1;
+        printf(1, "forked %d processes...\n", i + 1);
     }
 
     if(pid > 0) {
         printf(1, "PRESS CTRL-R IN RAPID SUCCESSION (Ready List should show cyclical flow)\n");
-        printf(1, "Parent going to sleep for 20 sec...\n");
-        sleep(30 * TPS);
-        printf(1, "Parent waking up!\n");
-
-        // Reap children
-        for(i = 0; i < 10; i++) {
-            kill(pids[i]);
-        }   
+        printf(1, "Parent waiting for children in infinite loop. Manually terminate.\n");
+        wait();
     }
 
     // Child Process
     if(pid == 0) {
-        sleep(15 * TPS);
         for(;;) {
             // spin...
         }
@@ -106,8 +96,12 @@ ready(void) {
 
 int
 main(void) {
+    #ifdef READY_TEST
     ready();
+    #endif
+    #ifdef ZOMBIEFREE_TEST
     zombiefree();
+    #endif
 
     exit();
 }

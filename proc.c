@@ -170,10 +170,8 @@ userinit(void)
   #ifdef CS333_P2
   // Set default UID and GID
   p->uid = UID_DEFAULT;
-  p->gid = GID_DEFAULT;
-  #endif
+  p->gid = GID_DEFAULT;\
 
-  #ifdef CS33_P3P4
   p->parent = 0;
   #endif
 
@@ -455,13 +453,6 @@ wait(void)
   for(;;){
     // Scan through table looking for zombie children.
     havekids = 0;
-    /*
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if(p->parent != proc)
-        continue;
-      havekids = 1;
-      if(p->state == ZOMBIE){
-      */  // Found one.
 
     p = ptable.pLists.zombie;
     while(p) {
@@ -914,11 +905,17 @@ readydump(void) {
     struct proc* p;
 
     cprintf("Ready List Processes:\n");
+    acquire(&ptable.lock);
     p = ptable.pLists.ready;
-    while(p) {
-        cprintf("%d -> ", p->pid);
+    if(p) {
+        cprintf("%d ", p->pid);
         p = p->next;
     }
+    while(p) {
+        cprintf("-> %d ", p->pid);
+        p = p->next;
+    }
+    release(&ptable.lock);
     cprintf("\n");
 }
 
@@ -927,11 +924,13 @@ freedump(void) {
     struct proc* p;
     int pcount = 0;
 
+    acquire(&ptable.lock);
     p = ptable.pLists.free;
     while(p) {
         pcount += 1;
         p = p->next;
     }
+    release(&ptable.lock);
 
     cprintf("Free List Size: %d processes\n", pcount);
 }
@@ -941,11 +940,13 @@ sleepdump(void) {
     struct proc* p;
 
     cprintf("Sleep List Processes:\n");
+    acquire(&ptable.lock);
     p = ptable.pLists.sleep;
     while(p) {
         cprintf("%d -> ", p->pid);
         p = p->next;
     }
+    release(&ptable.lock);
     cprintf("\n");
 }
 
@@ -954,11 +955,13 @@ zombiedump(void) {
     struct proc* p;
     
     cprintf("Zombie List Processes:\n");
+    acquire(&ptable.lock);
     p = ptable.pLists.zombie;
     while(p) {
         cprintf("(%d, %d) -> ", p->pid, p->parent ? p->parent->pid : p->pid);
         p = p->next;
     }
+    release(&ptable.lock);
     cprintf("\n");
 }
 #endif
