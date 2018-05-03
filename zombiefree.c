@@ -4,8 +4,13 @@
 
 #define NPROC_MINUS_3 61
 
+// Tests
+#define ZOMBIEFREE_TEST
+#define READY_TEST
+
+#ifdef ZOMBIEFREE_TEST
 int
-main(void) {
+zombiefree(void) {
 
     int total = 0;
     int i = 0;
@@ -54,7 +59,55 @@ main(void) {
         }
     }
 
-    printf(1, "TEST PASSED\n");
+   // printf(1, "TEST PASSED\n");
+
+    return 0;
+}
+#endif
+
+#ifdef READY_TEST
+int
+ready(void) {
+    int i = 0;
+    int pid;
+    int pids[10];
+        
+    printf(1, "forking... this may take a minute\n");
+
+    // Fork 10 processes
+    while((pid = fork()) > 0 && i < 10) {
+        pids[i] = pid;
+        i += 1;
+    }
+
+    if(pid > 0) {
+        printf(1, "PRESS CTRL-R IN RAPID SUCCESSION (Ready List should show cyclical flow)\n");
+        printf(1, "Parent going to sleep for 20 sec...\n");
+        sleep(30 * TPS);
+        printf(1, "Parent waking up!\n");
+
+        // Reap children
+        for(i = 0; i < 10; i++) {
+            kill(pids[i]);
+        }   
+    }
+
+    // Child Process
+    if(pid == 0) {
+        sleep(15 * TPS);
+        for(;;) {
+            // spin...
+        }
+    }
+    
+    return 0;
+}
+#endif
+
+int
+main(void) {
+    ready();
+    zombiefree();
 
     exit();
 }

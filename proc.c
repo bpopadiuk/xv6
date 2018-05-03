@@ -578,41 +578,48 @@ void
 scheduler(void)
 {
     struct proc *p; 
+    int idle;
 
     for(;;){
       
       // Enable interrupts on this processor.
       sti();
 
+      idle = 1; // assume idle unless we schedule a process
+
       // Loop over process table looking for process to run.
       acquire(&ptable.lock);
-      if(!ptable.pLists.ready) {  // no ready processes, release ptable lock and idle
-        release(&ptable.lock);
-        sti();
-        hlt();
-        continue;
-      }
+      
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
       // before jumping back to us.
       p = ptable.pLists.ready;
-      proc = p;
-      switchuvm(p);
-      if(stateListRemove(&ptable.pLists.ready, &ptable.pLists.readyTail, p) < 0)
-        panic("stateListRemove() failed to remove p from ready list in scheduler()");
-      assertState(p, RUNNABLE);
-      p->state = RUNNING;
-      stateListAdd(&ptable.pLists.running, &ptable.pLists.runningTail, p);
-      #ifdef CS333_P2
-      p->cpu_ticks_in = ticks;
-      #endif
-      swtch(&cpu->scheduler, proc->context);
-      switchkvm();
+      if(p) {
+        idle = 0; // not idle this timeslice
+        proc = p;
+        switchuvm(p);
+        if(stateListRemove(&ptable.pLists.ready, &ptable.pLists.readyTail, p) < 0)
+            panic("stateListRemove() failed to remove p from ready list in scheduler()");
+        assertState(p, RUNNABLE);
+        p->state = RUNNING;
+        stateListAdd(&ptable.pLists.running, &ptable.pLists.runningTail, p);
+        #ifdef CS333_P2
+        p->cpu_ticks_in = ticks;
+        #endif
+        swtch(&cpu->scheduler, proc->context);
+        switchkvm();
 
-      // Process is done running for now.
-      // It should have changed its p->state before coming back.
-      proc = 0;
+        // Process is done running for now.
+        // It should have changed its p->state before coming back.
+        proc = 0;
+      }
       release(&ptable.lock);
+      
+      // if idle, wait for next interrupt
+      if (idle) {
+        sti();
+        hlt();
+      }    
     }
 }
 #endif
