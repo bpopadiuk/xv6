@@ -71,8 +71,8 @@ ready(void) {
         
     printf(1, "forking first process...\n");
 
-    // Fork 10 processes (i < 9 because fork() still executes when the while condition fails)
-    while((pid = fork()) > 0 && i < 9) {
+    // Fork 30 processes (i < 29 because fork() still executes when the while condition fails)
+    while((pid = fork()) > 0 && i < 29) {
         i += 1;
         printf(1, "forked %d processes...\n", i + 1);
     }
