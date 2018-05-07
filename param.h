@@ -17,3 +17,7 @@
 #define UID_DEFAULT  0
 #define GID_DEFAULT  0
 #endif
+
+#ifdef CS333_P3P4
+#define MAXPRIO 0
+#endif
