@@ -10,9 +10,6 @@
 #ifdef CS333_P2
 #include "uproc.h"
 #endif
-#ifdef CS333_P3P4
-#define MAXPRIO 0
-#endif
 
 #ifdef CS333_P3P4
 struct StateLists {
@@ -570,6 +567,7 @@ scheduler(void)
 {
     struct proc *p; 
     int idle;
+    int i;
 
     for(;;){
       
@@ -584,7 +582,15 @@ scheduler(void)
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
       // before jumping back to us.
-      p = ptable.pLists.ready[0];
+      i = 0;
+      p = ptable.pLists.ready[i];
+      while(!p) {
+        i += 1;
+        if(i > MAXPRIO)
+            break;
+        p = ptable.pLists.ready[i];
+      }
+        
       if(p) {
         idle = 0; // not idle this timeslice
         proc = p;
