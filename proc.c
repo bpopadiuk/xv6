@@ -345,15 +345,6 @@ exit(void)
   // Parent might be sleeping in wait().
   wakeup1(proc->parent);
 
-  // Pass abandoned children to init.
-/*  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-    if(p->parent == proc){
-      p->parent = initproc;
-      if(p->state == ZOMBIE)
-        wakeup1(initproc);
-    }
-  }*/
-
     p = ptable.pLists.running;
     while(p) {
         if(p->parent == proc) {

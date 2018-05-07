@@ -191,10 +191,12 @@ consoleintr(int (*getc)(void))
 {
   int c;
   int doprocdump = 0;
+  #ifdef CS333_P3P4
   int dofreedump = 0;
   int doreadydump = 0;
   int dosleepdump = 0;
   int dozombiedump = 0;
+  #endif
 
   acquire(&cons.lock);
   while((c = getc()) >= 0){
@@ -246,6 +248,7 @@ consoleintr(int (*getc)(void))
   if(doprocdump) {
     procdump();  // now call procdump() wo. cons.lock held
   }
+  #ifdef CS333_P3P4
   if(dofreedump) {
     freedump();  // now call freedump()
   }
@@ -258,6 +261,7 @@ consoleintr(int (*getc)(void))
   if(dozombiedump) {
     zombiedump();
   }
+  #endif
 }
 
 int

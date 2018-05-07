@@ -2,11 +2,18 @@
 #include "types.h"
 #include "user.h"
 
+#define NPROC 64
 #define NPROC_MINUS_3 61
 
 // Tests
+#define FREE_INIT
+#define FREE_UPDATE
 #define ZOMBIEFREE_TEST
-#define READY_TEST
+#define SLEEP_UPDATE
+#define KILLCHECK
+#define WAITCHECK
+#define EXITCHECK
+//#define READY_TEST
 
 #ifdef ZOMBIEFREE_TEST
 int
@@ -16,6 +23,11 @@ zombiefree(void) {
     int i = 0;
     int pids[NPROC_MINUS_3];
     int pid;
+
+
+    printf(1, "PRESS CTRL-S and CTRL-F, sleeping list should show init, sh, and p3test processes, free list should be %d\n", NPROC - 3);
+    sleep(5 * TPS);
+    
 
     // fork as many processes as the system will allow
     printf(1, "forking...\n");
@@ -43,7 +55,7 @@ zombiefree(void) {
         
         // Check that the first 3 processes were added to Zombie List
         if(i < 3) {
-            printf(1, "\nPRESS CTRL-Z ((%d, 3) should be on Zombie List)\n", pids[i]);
+            printf(1, "\nPRESS CTRL-Z ((%d, %d) should be on Zombie List)\n", pids[i], getpid()); // zombie list contains tuple of the form (pid, ppid), use getpid() because we are in parent
             sleep(5 * TPS);
         }
         
@@ -59,6 +71,18 @@ zombiefree(void) {
         }
     }
 
+    // Test that exit() moves process to the zombie list
+    pid = fork();
+    if(pid == 0) {
+        exit();
+    }
+    else {
+        printf(1, "\nTESTING exit(), press ctrl-z\n");
+        printf(1, "%d should appear on zombie list\n", pid);
+        sleep(5 * TPS);
+        wait();
+    }
+    
     return 0;
 }
 #endif
