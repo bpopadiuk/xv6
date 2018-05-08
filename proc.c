@@ -134,6 +134,10 @@ found:
   p->cpu_ticks_total = 0;
   p->cpu_ticks_in = 0;
   #endif
+  #ifdef CS333_P3P4
+  p->priority = 0;
+  p->budget = BUDGET_DEFAULT;
+  #endif
 
   return p;
 }
@@ -187,7 +191,7 @@ userinit(void)
 
   p->state = RUNNABLE;
   #ifdef CS333_P3P4
-  stateListAdd(&ptable.pLists.ready[0], &ptable.pLists.readyTail[0], p);
+  stateListAdd(&ptable.pLists.ready[p->priority], &ptable.pLists.readyTail[p->priority], p);
   #endif
 }
 
@@ -265,7 +269,7 @@ fork(void)
   if(stateListRemove(&ptable.pLists.embryo, &ptable.pLists.embryo, np) < 0)
     panic("stateListRemove() failed to remove np from embryo list in fork() (line 274)");
   assertState(np, EMBRYO);
-  stateListAdd(&ptable.pLists.ready[0], &ptable.pLists.readyTail[0], np);
+  stateListAdd(&ptable.pLists.ready[np->priority], &ptable.pLists.readyTail[np->priority], np);
   #endif
   np->state = RUNNABLE;
   release(&ptable.lock);
@@ -596,7 +600,7 @@ scheduler(void)
         idle = 0; // not idle this timeslice
         proc = p;
         switchuvm(p);
-        if(stateListRemove(&ptable.pLists.ready[0], &ptable.pLists.readyTail[0], p) < 0)
+        if(stateListRemove(&ptable.pLists.ready[p->priority], &ptable.pLists.readyTail[p->priority], p) < 0)
             panic("stateListRemove() failed to remove p from ready list in scheduler()");
         assertState(p, RUNNABLE);
         p->state = RUNNING;
@@ -654,7 +658,8 @@ yield(void)
   if(stateListRemove(&ptable.pLists.running, &ptable.pLists.runningTail, proc) < 0)
     panic("stateListRemove() failed to remove proc from running list in yield()");
   assertState(proc, RUNNING);
-  stateListAdd(&ptable.pLists.ready[0], &ptable.pLists.readyTail[0], proc);
+  proc->budget = proc->budget - (ticks - proc->cpu_ticks_in);
+  stateListAdd(&ptable.pLists.ready[proc->priority], &ptable.pLists.readyTail[proc->priority], proc);
   #endif
   proc->state = RUNNABLE;
   sched();
@@ -750,7 +755,7 @@ wakeup1(void *chan)
             if(stateListRemove(&ptable.pLists.sleep, &ptable.pLists.sleepTail, p) < 0)
                 panic("stateListRemove() failed to remove p from sleep list in wakeup1()");
             assertState(p, SLEEPING);
-            stateListAdd(&ptable.pLists.ready[0], &ptable.pLists.readyTail[0], p);
+            stateListAdd(&ptable.pLists.ready[p->priority], &ptable.pLists.readyTail[p->priority], p);
             p->state = RUNNABLE;
         }
         p = p->next;
