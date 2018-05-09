@@ -97,6 +97,9 @@ setpriority(int pid, int priority)
             if(p->pid == pid) {
                 p->priority = priority;
                 p->budget = BUDGET_DEFAULT;
+                // if on the ready list we need to move it to the proper queue
+                stateListRemove(&ptable.pLists.ready[i], &ptable.pLists.readyTail[i], p);
+                stateListAdd(&ptable.pLists.ready[p->priority], &ptable.pLists.readyTail[p->priority], p);
                 return 0;
             }
             p = p->next;
