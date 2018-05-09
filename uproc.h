@@ -11,5 +11,8 @@ struct uproc {
     char state[STRMAX];
     uint sz;
     char name[STRMAX];
+    #ifdef CS333_P3P4
+    uint priority;
+    #endif
 };
 #endif

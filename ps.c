@@ -4,7 +4,11 @@
 #include "uproc.h"
 
 #define MAX 64 
+#ifdef CS333_P3P4
+#define PSHEADER "\nPID\tUID\tGID\tPPID\tPrio\tElapsed\tCPU\tState\tSize\tName\n"
+#else
 #define PSHEADER "\nPID\tUID\tGID\tPPID\tElapsed\tCPU\tState\tSize\tName\n"
+#endif
 
 void
 print_ticks_as_seconds(uint milliseconds)
@@ -42,6 +46,9 @@ main(void)
         if(table[i].pid == 0)
             break;
         printf(1, "%d\t%d\t%d\t%d\t", table[i].pid, table[i].uid, table[i].gid, table[i].ppid);
+        #ifdef CS333_P3P4
+        printf(1, "%d\t", table[i].priority);
+        #endif
         print_ticks_as_seconds(table[i].elapsed);
         printf(1, "\t");
         print_ticks_as_seconds(table[i].cpu_ticks_total);

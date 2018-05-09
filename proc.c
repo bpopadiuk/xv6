@@ -721,16 +721,16 @@ yield(void)
 {
   acquire(&ptable.lock);  //DOC: yieldlock
   #ifdef CS333_P3P4
+  // Check if proc has exhausted its budget
+  // demote if necessary before removing from running list
+  if(proc->budget < 0) 
+    demote(proc);
+
   if(stateListRemove(&ptable.pLists.running, &ptable.pLists.runningTail, proc) < 0)
     panic("stateListRemove() failed to remove proc from running list in yield()");
   assertState(proc, RUNNING);
   proc->budget = proc->budget - (ticks - proc->cpu_ticks_in);
   
-  // Check if proc has exhausted its budget
-  if(proc->budget < 0)
-    demote(proc);
-
-
   stateListAdd(&ptable.pLists.ready[proc->priority], &ptable.pLists.readyTail[proc->priority], proc);
   #endif
   proc->state = RUNNABLE;
@@ -972,6 +972,9 @@ getprocs(int max, struct uproc *table)
         safestrcpy(table->state, states[p->state], 7);
         table->sz = p->sz;
         safestrcpy(table->name, p->name, sizeof(p->name));
+        #ifdef CS333_P3P4
+        table->priority = p->priority;
+        #endif
         table += 1;
         pcount += 1;
     }
@@ -989,20 +992,25 @@ getprocs(int max, struct uproc *table)
 void
 readydump(void) {
     struct proc* p;
+    int i;
 
     cprintf("Ready List Processes:\n");
     acquire(&ptable.lock);
-    p = ptable.pLists.ready[0];
-    if(p) {
-        cprintf("%d ", p->pid);
-        p = p->next;
-    }
-    while(p) {
-        cprintf("-> %d ", p->pid);
-        p = p->next;
+    
+    for(i = 0; i <= MAXPRIO; i++) {
+        cprintf("%d: ", i);
+        p = ptable.pLists.ready[i];
+        if(p) {
+            cprintf("(%d, %d) ", p->pid, p->budget);
+            p = p->next;
+        }
+        while(p) {
+            cprintf("-> (%d, %d) ", p->pid, p->budget);
+            p = p->next;
+        }
+        cprintf("\n\n");
     }
     release(&ptable.lock);
-    cprintf("\n");
 }
 
 void
@@ -1099,6 +1107,23 @@ procdumpP2(struct proc *p, char *state)
 }
 #endif
 
+#ifdef CS333_P3P4
+void
+procdumpP3P4(struct proc *p, char *state)
+{
+  uint elapsed = ticks - p->start_ticks;
+
+
+  cprintf("%d\t%s\t\t%d\t%d\t", p->pid, p->name, p->uid, p->gid);
+  cprintf("%d\t", p->parent ? p->parent->pid : p->pid);
+  cprintf("%d\t", p->priority);
+  print_ticks_as_seconds(elapsed);
+  cprintf("\t");
+  print_ticks_as_seconds(p->cpu_ticks_total);
+  cprintf("\t%s\t%d\t", state, p->sz);
+}
+#endif
+
 void
 procdump(void)
 {
@@ -1127,7 +1152,9 @@ procdump(void)
       state = states[p->state];
     else
       state = "???";
-#if defined(CS333_P2)
+#if defined(CS333_P3P4)
+    procdumpP3P4(p, state);
+#elif defined(CS333_P2)
     procdumpP2(p, state);
 #elif defined(CS333_P1)
     procdumpP1(p, state);
