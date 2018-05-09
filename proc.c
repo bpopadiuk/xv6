@@ -53,6 +53,8 @@ static int stateListAdd(struct proc** head, struct proc** tail, struct proc* p);
 static int stateListRemove(struct proc** head, struct proc** tail, struct proc* p);
 static void assertState(struct proc* p, enum procstate state);
 int setpriority(int pid, int priority);
+static void demote(struct proc* p);
+static void promoteAll(void);
 #endif
 
 #ifdef CS333_P3P4
@@ -207,6 +209,7 @@ userinit(void)
   acquire(&ptable.lock);
   initProcessLists();
   initFreeList();
+  ptable.PromoteAtTime = ticks + TICKS_TO_PROMOTE;
   release(&ptable.lock);  
   #endif
 
@@ -636,6 +639,13 @@ scheduler(void)
 
       // Loop over process table looking for process to run.
       acquire(&ptable.lock);
+
+      // Check if it's time for periodic upward adjustment
+      
+      if(ticks >= ptable.PromoteAtTime) {
+        promoteAll();
+        ptable.PromoteAtTime = ticks + TICKS_TO_PROMOTE;
+      } 
       
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
@@ -714,13 +724,8 @@ yield(void)
   proc->budget = proc->budget - (ticks - proc->cpu_ticks_in);
   
   // Check if proc has exhausted its budget
-  if(proc->budget < 0) {
-    proc->budget = BUDGET_DEFAULT; // reset budget
-    // Only demote proc if it isn't already on lowest priority queue
-    if(proc->priority < MAXPRIO) {  
-        setpriority(proc->pid, (proc->priority + 1));
-    }
-  }  
+  if(proc->budget < 0)
+    demote(proc);
 
 
   stateListAdd(&ptable.pLists.ready[proc->priority], &ptable.pLists.readyTail[proc->priority], proc);
@@ -812,7 +817,6 @@ wakeup1(void *chan)
 {
  struct proc *p;
 
-//  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
     p = ptable.pLists.sleep;
     while(p) {
         if(p->state == SLEEPING && p->chan == chan) {
@@ -1239,5 +1243,55 @@ static void assertState(struct proc* p, enum procstate state) {
         cprintf("expected %d, got %d\n", state, p->state);
         panic("process list/state mismatch");
     }    
+}
+
+// demote p by decrementing its priority field, reset budget
+// will be moved to appropriate ready queue when stateListAdd() is called
+static void
+demote(struct proc* p) {
+    proc->budget = BUDGET_DEFAULT; // reset budget
+    
+    // Only demote proc if it isn't already on lowest priority queue
+    if(proc->priority < MAXPRIO)  
+        setpriority(proc->pid, (proc->priority + 1));
+}
+
+// promote all processes up to the next queue
+static void
+promoteAll(void) {
+    int i;
+    struct proc *p;
+
+    // if system is not running MLFQ hit eject
+    if(MAXPRIO < 1)
+        return;
+
+    // first, update priority fields in each struct (top queue can't be promoted any further)
+    for(i = 1; i <= MAXPRIO; i++) {
+        //set priority fields in each proc struct
+        p = ptable.pLists.ready[i];
+        while(p) {
+            p->priority -= 1; 
+            p = p->next;
+        }
+    }    
+
+    // Move pointers to promote queues
+    // start by promoting second level queue to back of first level queue
+    if(ptable.pLists.readyTail[0]) // don't dereference null pointer if top queue empty!
+        ptable.pLists.readyTail[0]->next = ptable.pLists.ready[1];
+    ptable.pLists.readyTail[0] = ptable.pLists.readyTail[1];
+    for(i = 1; i < MAXPRIO; i++) {
+        // promote entire queue by pointing head and tail pointers to next lower queue        
+        ptable.pLists.ready[i] = ptable.pLists.ready[i+1];
+        ptable.pLists.readyTail[i] = ptable.pLists.readyTail[i+1];
+    }
+
+    // Lowest queue will be empty
+    ptable.pLists.ready[MAXPRIO] = 0;
+    ptable.pLists.readyTail[MAXPRIO] = 0;
+
+    return;
+    
 }
 #endif
