@@ -52,6 +52,59 @@ static void initFreeList(void);
 static int stateListAdd(struct proc** head, struct proc** tail, struct proc* p);
 static int stateListRemove(struct proc** head, struct proc** tail, struct proc* p);
 static void assertState(struct proc* p, enum procstate state);
+int setpriority(int pid, int priority);
+#endif
+
+#ifdef CS333_P3P4
+int
+setpriority(int pid, int priority) 
+{
+    int i;
+    struct proc *p;
+
+    // Check that priority is within legal bounds
+    if(priority < 0 || priority > MAXPRIO)
+        return -1;
+
+    // Search the running list
+    p = ptable.pLists.running;
+    while(p) {
+        if(p->pid == pid) {
+            p->priority = priority;
+            p->budget = BUDGET_DEFAULT;
+            return 0;
+        }
+        p = p->next;
+    }
+
+    // Search the sleep list
+    p = ptable.pLists.sleep;
+    while(p) {
+        if(p->pid == pid) {
+            p->priority = priority;
+            p->budget = BUDGET_DEFAULT;
+            return 0;
+        }
+        p = p->next;
+    }
+
+    // Search the ready lists
+    for(i = 0; i <= MAXPRIO; i++ ) {
+        p = ptable.pLists.ready[i];
+        while(p) {
+            if(p->pid == pid) {
+                p->priority = priority;
+                p->budget = BUDGET_DEFAULT;
+                return 0;
+            }
+            p = p->next;
+        }
+    }
+    
+    // Did not find process matching pid
+    return -1;
+
+}
 #endif
 
 void
@@ -659,6 +712,17 @@ yield(void)
     panic("stateListRemove() failed to remove proc from running list in yield()");
   assertState(proc, RUNNING);
   proc->budget = proc->budget - (ticks - proc->cpu_ticks_in);
+  
+  // Check if proc has exhausted its budget
+  if(proc->budget < 0) {
+    proc->budget = BUDGET_DEFAULT; // reset budget
+    // Only demote proc if it isn't already on lowest priority queue
+    if(proc->priority < MAXPRIO) {  
+        setpriority(proc->pid, (proc->priority + 1));
+    }
+  }  
+
+
   stateListAdd(&ptable.pLists.ready[proc->priority], &ptable.pLists.readyTail[proc->priority], proc);
   #endif
   proc->state = RUNNABLE;

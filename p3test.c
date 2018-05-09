@@ -13,7 +13,7 @@
 #define KILLCHECK
 #define WAITCHECK
 #define EXITCHECK
-//#define READY_TEST
+#define READY_TEST
 
 #ifdef ZOMBIEFREE_TEST
 int

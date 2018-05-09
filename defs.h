@@ -126,6 +126,7 @@ void            readydump(void);
 void            freedump(void);
 void            sleepdump(void);
 void            zombiedump(void);
+int             setpriority(int, int);
 #endif
 
 #ifdef CS333_P2
