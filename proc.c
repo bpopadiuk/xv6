@@ -1302,6 +1302,10 @@ promoteAll(void) {
         p = ptable.pLists.ready[i];
         while(p) {
             p->priority -= 1;
+//            current = p;
+ //           stateListRemove(&ptable.pLists.ready[i], &ptable.pLists.readyTail[i], p);
+  //          stateListAdd(&ptable.pLists.ready[i-1], &ptable.pLists.readyTail[i-1], p);
+//            p = current->next;
             p = p->next;
         }
     }    
