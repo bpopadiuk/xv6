@@ -643,7 +643,6 @@ scheduler(void)
       // Check if it's time for periodic upward adjustment
       
       if(ticks >= ptable.PromoteAtTime) {
-        cprintf("scheduler about to promote\n");
         promoteAll();
         ptable.PromoteAtTime = ticks + TICKS_TO_PROMOTE;
       } 
@@ -1261,7 +1260,7 @@ demote(struct proc* p) {
 static void
 promoteAll(void) {
     int i;
-    struct proc *p, *current;
+    struct proc *p;
 
     // if system is not running MLFQ hit eject
     if(MAXPRIO < 1)
@@ -1273,19 +1272,19 @@ promoteAll(void) {
         p = ptable.pLists.ready[i];
         while(p) {
             p->priority -= 1;
-            current = p;
-            stateListRemove(&ptable.pLists.ready[i], &ptable.pLists.readyTail[i], p);
-            stateListAdd(&ptable.pLists.ready[i-1], &ptable.pLists.readyTail[i-1], p); 
-            p = current->next;
+            p = p->next;
         }
     }    
 
     // Move pointers to promote queues
     // start by promoting second level queue to back of first level queue
-/*    if(ptable.pLists.readyTail[0] != ) { // if top queue non-empty, promote second queue to back of it
-        ptable.pLists.readyTail[0]->next = ptable.pLists.ready[1];
-        ptable.pLists.readyTail[0] = ptable.pLists.readyTail[1];
-    } else {                         // otherwise do it like the others, promoting enire second queue
+    if(ptable.pLists.readyTail[0]) {  // if top queue non-empty, promote second queue to back of it
+        if(ptable.pLists.ready[1] && ptable.pLists.readyTail[1]) { // only if second queue isn't empty, if empty do nothing
+            ptable.pLists.readyTail[0]->next = ptable.pLists.ready[1];
+            ptable.pLists.readyTail[0] = ptable.pLists.readyTail[1];
+        }
+    } else {                              
+        // otherwise do it like the others, promoting enire second queue
         ptable.pLists.ready[0] = ptable.pLists.ready[1];
         ptable.pLists.readyTail[0] = ptable.pLists.readyTail[1];
     }
@@ -1297,7 +1296,7 @@ promoteAll(void) {
 
     // Lowest queue will be empty
     ptable.pLists.ready[MAXPRIO] = 0;
-    ptable.pLists.readyTail[MAXPRIO] = 0;*/
+    ptable.pLists.readyTail[MAXPRIO] = 0;
 
     return;
     
