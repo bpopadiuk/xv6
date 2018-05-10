@@ -908,7 +908,7 @@ kill(int pid)
         if(p->priority > 0) {
             stateListRemove(&ptable.pLists.ready[p->priority], &ptable.pLists.readyTail[p->priority], p);
             p->priority = 0;
-            stateListAdd(&ptable.pLists.ready[0], &ptable.pLists.readyTail[0], p);
+            stateListAdd(&ptable.pLists.ready[p->priority], &ptable.pLists.readyTail[p->priority], p);
         }
         release(&ptable.lock);
         return 0;
