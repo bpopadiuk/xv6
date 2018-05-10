@@ -52,7 +52,6 @@ static void initFreeList(void);
 static int stateListAdd(struct proc** head, struct proc** tail, struct proc* p);
 static int stateListRemove(struct proc** head, struct proc** tail, struct proc* p);
 static void assertState(struct proc* p, enum procstate state);
-int setpriority(int pid, int priority);
 static void demote(struct proc* p);
 static void promoteAll(void);
 #endif
@@ -657,7 +656,7 @@ scheduler(void)
       p = ptable.pLists.ready[i];
       while(!p) {
         i += 1;
-        if(i > MAXPRIO)
+        if(i > MAXPRIO) 
             break;
         p = ptable.pLists.ready[i];
       }
@@ -723,13 +722,16 @@ yield(void)
   #ifdef CS333_P3P4
   // Check if proc has exhausted its budget
   // demote if necessary before removing from running list
-  if(proc->budget < 0) 
-    demote(proc);
 
   if(stateListRemove(&ptable.pLists.running, &ptable.pLists.runningTail, proc) < 0)
     panic("stateListRemove() failed to remove proc from running list in yield()");
   assertState(proc, RUNNING);
+
+  // Check if proc has exhausted its budget
+  // demote if necessary before removing from running list
   proc->budget = proc->budget - (ticks - proc->cpu_ticks_in);
+  if(proc->budget <= 0)
+    demote(proc);
   
   stateListAdd(&ptable.pLists.ready[proc->priority], &ptable.pLists.readyTail[proc->priority], proc);
   #endif
@@ -785,8 +787,15 @@ sleep(void *chan, struct spinlock *lk)
   #ifdef CS333_P3P4
   if(stateListRemove(&ptable.pLists.running, &ptable.pLists.runningTail, proc) < 0)
     panic("stateListRemove() failed to remove proc from running in sleep()");
+
+  // Check if proc has exhausted its budget
+  proc->budget = proc->budget - (ticks - proc->cpu_ticks_in);
+  if(proc->budget <= 0)
+    demote(proc);  
+
   assertState(proc, RUNNING);
   stateListAdd(&ptable.pLists.sleep, &ptable.pLists.sleepTail, proc);
+  
   #endif
   proc->state = SLEEPING;
   sched();
@@ -895,6 +904,12 @@ kill(int pid)
     while(p) {
         if(p->pid == pid) {
         p->killed = 1; 
+        // promote to top queue if need be to expedite trip out of system
+        if(p->priority > 0) {
+            stateListRemove(&ptable.pLists.ready[p->priority], &ptable.pLists.readyTail[p->priority], p);
+            p->priority = 0;
+            stateListAdd(&ptable.pLists.ready[0], &ptable.pLists.readyTail[0], p);
+        }
         release(&ptable.lock);
         return 0;
         }       
@@ -912,7 +927,8 @@ kill(int pid)
         panic("stateListRemove() failed to remove p from sleep list in kill()");
       assertState(p, SLEEPING);
       p->state = RUNNABLE;
-      stateListAdd(&ptable.pLists.ready[0], &ptable.pLists.readyTail[0], p);
+      p->priority = 0; // promote to top queue to expedite its trip out of the system
+      stateListAdd(&ptable.pLists.ready[p->priority], &ptable.pLists.readyTail[p->priority], p);
       release(&ptable.lock);
       return 0;
     }    
@@ -1279,11 +1295,12 @@ static void assertState(struct proc* p, enum procstate state) {
 // will be moved to appropriate ready queue when stateListAdd() is called
 static void
 demote(struct proc* p) {
-    proc->budget = BUDGET_DEFAULT; // reset budget
+    p->budget = BUDGET_DEFAULT; // reset budget
     
     // Only demote proc if it isn't already on lowest priority queue
-    if(proc->priority < MAXPRIO)  
-        setpriority(proc->pid, (proc->priority + 1));
+    if(p->priority < MAXPRIO)  
+        p->priority += 1;
+        //setpriority(p->pid, p->priority + 1);
 }
 
 // promote all processes up to the next queue

@@ -1539,7 +1539,6 @@ sbrktest(void)
     printf(stdout, "failed sbrk leaked memory\n");
     exit();
   }
-
   if(sbrk(0) > oldbrk)
     sbrk(-(sbrk(0) - oldbrk));
 
