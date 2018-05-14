@@ -95,3 +95,4 @@ uproc.h
 testuidgid.c
 ps-test.c
 p3test.c
+p4test.c

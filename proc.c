@@ -54,6 +54,7 @@ static int stateListRemove(struct proc** head, struct proc** tail, struct proc* 
 static void assertState(struct proc* p, enum procstate state);
 static void demote(struct proc* p);
 static void promoteAll(void);
+struct proc* selectProc(void);
 #endif
 
 #ifdef CS333_P3P4
@@ -630,7 +631,6 @@ scheduler(void)
 {
     struct proc *p; 
     int idle;
-    int i;
 
     for(;;){
       
@@ -652,21 +652,15 @@ scheduler(void)
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
       // before jumping back to us.
-      i = 0;
-      p = ptable.pLists.ready[i];
-      while(!p) {
-        i += 1;
-        if(i > MAXPRIO) 
-            break;
-        p = ptable.pLists.ready[i];
-      }
+      p = selectProc();
         
       if(p) {
         idle = 0; // not idle this timeslice
         proc = p;
         switchuvm(p);
-        if(stateListRemove(&ptable.pLists.ready[p->priority], &ptable.pLists.readyTail[p->priority], p) < 0)
+        if(stateListRemove(&ptable.pLists.ready[p->priority], &ptable.pLists.readyTail[p->priority], p) < 0) {
             panic("stateListRemove() failed to remove p from ready list in scheduler()");
+        }
         assertState(p, RUNNABLE);
         p->state = RUNNING;
         stateListAdd(&ptable.pLists.running, &ptable.pLists.runningTail, p);
@@ -1308,6 +1302,7 @@ static void
 promoteAll(void) {
     int i;
     struct proc *p;
+    //struct proc *current;
 
     // if system is not running MLFQ hit eject
     if(MAXPRIO < 1)
@@ -1320,8 +1315,8 @@ promoteAll(void) {
         while(p) {
             p->priority -= 1;
 //            current = p;
- //           stateListRemove(&ptable.pLists.ready[i], &ptable.pLists.readyTail[i], p);
-  //          stateListAdd(&ptable.pLists.ready[i-1], &ptable.pLists.readyTail[i-1], p);
+//            stateListRemove(&ptable.pLists.ready[i], &ptable.pLists.readyTail[i], p);
+//            stateListAdd(&ptable.pLists.ready[i-1], &ptable.pLists.readyTail[i-1], p);
 //            p = current->next;
             p = p->next;
         }
@@ -1329,16 +1324,17 @@ promoteAll(void) {
 
     // Move pointers to promote queues
     // start by promoting second level queue to back of first level queue
-    if(ptable.pLists.readyTail[0]) {  // if top queue non-empty, promote second queue to back of it
-        if(ptable.pLists.ready[1] && ptable.pLists.readyTail[1]) { // only if second queue isn't empty, if empty do nothing
-            ptable.pLists.readyTail[0]->next = ptable.pLists.ready[1];
-            ptable.pLists.readyTail[0] = ptable.pLists.readyTail[1];
-        }
-    } else {                              
-        // otherwise do it like the others, promoting enire second queue
+    if(ptable.pLists.ready[0] && ptable.pLists.ready[1]) { // procs on both level 0 and level 1 queues
+        ptable.pLists.readyTail[0]->next = ptable.pLists.ready[1];
+        ptable.pLists.readyTail[0] = ptable.pLists.readyTail[1];
+        ptable.pLists.readyTail[0]->next = 0;
+    } else if(!ptable.pLists.ready[0] && ptable.pLists.ready[1]) { // procs on level 1 queue but not on level 0 queue
         ptable.pLists.ready[0] = ptable.pLists.ready[1];
         ptable.pLists.readyTail[0] = ptable.pLists.readyTail[1];
+        ptable.pLists.readyTail[0]->next = 0;
     }
+
+    
     for(i = 1; i < MAXPRIO; i++) {
         // promote entire queue by pointing head and tail pointers to next lower queue        
         ptable.pLists.ready[i] = ptable.pLists.ready[i+1];
@@ -1348,8 +1344,23 @@ promoteAll(void) {
     // Lowest queue will be empty
     ptable.pLists.ready[MAXPRIO] = 0;
     ptable.pLists.readyTail[MAXPRIO] = 0;
-
+    
     return;
     
+}
+
+struct proc*
+selectProc(void) {
+    int i = 0;
+    struct proc *p;
+
+    p = ptable.pLists.ready[i];
+    while(!p) {
+      i += 1;
+      if(i > MAXPRIO) 
+          return p;
+      p = ptable.pLists.ready[i];
+    }
+    return p;    
 }
 #endif
