@@ -28,7 +28,7 @@ int createSetPrioProc(int prio);
      names you have defined in your code.
 */
 const int plevels = MAXPRIO;
-const int budget = BUDGET_DEFAULT;
+const int budget = BUDGET;
 const int promo = TICKS_TO_PROMOTE;
 
 void

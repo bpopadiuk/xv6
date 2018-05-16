@@ -73,7 +73,7 @@ setpriority(int pid, int priority)
     while(p) {
         if(p->pid == pid) {
             p->priority = priority;
-            p->budget = BUDGET_DEFAULT;
+            p->budget = BUDGET;
             return 0;
         }
         p = p->next;
@@ -84,7 +84,7 @@ setpriority(int pid, int priority)
     while(p) {
         if(p->pid == pid) {
             p->priority = priority;
-            p->budget = BUDGET_DEFAULT;
+            p->budget = BUDGET;
             return 0;
         }
         p = p->next;
@@ -96,7 +96,7 @@ setpriority(int pid, int priority)
         while(p) {
             if(p->pid == pid) {
                 p->priority = priority;
-                p->budget = BUDGET_DEFAULT;
+                p->budget = BUDGET;
                 // if on the ready list we need to move it to the proper queue
                 stateListRemove(&ptable.pLists.ready[i], &ptable.pLists.readyTail[i], p);
                 stateListAdd(&ptable.pLists.ready[p->priority], &ptable.pLists.readyTail[p->priority], p);
@@ -194,7 +194,7 @@ found:
   #endif
   #ifdef CS333_P3P4
   p->priority = 0;
-  p->budget = BUDGET_DEFAULT;
+  p->budget = BUDGET;
   #endif
 
   return p;
@@ -643,7 +643,6 @@ scheduler(void)
       acquire(&ptable.lock);
 
       // Check if it's time for periodic upward adjustment
-      
       if(ticks >= ptable.PromoteAtTime) {
         promoteAll();
         ptable.PromoteAtTime = ticks + TICKS_TO_PROMOTE;
@@ -1289,7 +1288,7 @@ static void assertState(struct proc* p, enum procstate state) {
 // will be moved to appropriate ready queue when stateListAdd() is called
 static void
 demote(struct proc* p) {
-    p->budget = BUDGET_DEFAULT; // reset budget
+    p->budget = BUDGET; // reset budget
     
     // Only demote proc if it isn't already on lowest priority queue
     if(p->priority < MAXPRIO)  
