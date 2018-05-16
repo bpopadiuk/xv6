@@ -1307,16 +1307,29 @@ promoteAll(void) {
     if(MAXPRIO < 1)
         return;
 
+    // promote sleeping procs
+    p = ptable.pLists.sleep;
+    while(p) {
+        if(p->priority > 0)
+            p->priority -= 1;
+        p = p->next;
+    }
+
+    // promote running procs
+    p = ptable.pLists.running;
+    while(p) {
+        if(p->priority > 0)
+            p->priority -= 1;
+        p = p->next;
+    }
+
+    // ready lists
     // first, update priority fields in each struct (top queue can't be promoted any further)
     for(i = 1; i <= MAXPRIO; i++) {
         //set priority fields in each proc struct
         p = ptable.pLists.ready[i];
         while(p) {
             p->priority -= 1;
-//            current = p;
-//            stateListRemove(&ptable.pLists.ready[i], &ptable.pLists.readyTail[i], p);
-//            stateListAdd(&ptable.pLists.ready[i-1], &ptable.pLists.readyTail[i-1], p);
-//            p = current->next;
             p = p->next;
         }
     }    
