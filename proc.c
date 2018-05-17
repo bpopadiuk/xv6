@@ -899,7 +899,9 @@ kill(int pid)
         p->killed = 1; 
         // promote to top queue if need be to expedite trip out of system
         if(p->priority > 0) {
-            stateListRemove(&ptable.pLists.ready[p->priority], &ptable.pLists.readyTail[p->priority], p);
+            if(stateListRemove(&ptable.pLists.ready[p->priority], &ptable.pLists.readyTail[p->priority], p) < 0) {
+                panic("stateListRemove failed to remove p from ready list in kill()");
+            }
             p->priority = 0;
             stateListAdd(&ptable.pLists.ready[p->priority], &ptable.pLists.readyTail[p->priority], p);
         }
@@ -1351,6 +1353,8 @@ promoteAll(void) {
         // promote entire queue by pointing head and tail pointers to next lower queue        
         ptable.pLists.ready[i] = ptable.pLists.ready[i+1];
         ptable.pLists.readyTail[i] = ptable.pLists.readyTail[i+1];
+        if(ptable.pLists.readyTail[i])
+            ptable.pLists.readyTail[i]->next = 0;  // null terminate list if need be
     }
 
     // Lowest queue will be empty
