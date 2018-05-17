@@ -1295,7 +1295,6 @@ demote(struct proc* p) {
     // Only demote proc if it isn't already on lowest priority queue
     if(p->priority < MAXPRIO)  
         p->priority += 1;
-        //setpriority(p->pid, p->priority + 1);
 }
 
 // promote all processes up to the next queue
