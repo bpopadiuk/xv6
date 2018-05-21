@@ -95,6 +95,8 @@ setpriority(int pid, int priority)
         p = ptable.pLists.ready[i];
         while(p) {
             if(p->pid == pid) {
+                if(p->priority == priority) // already set to right priority, do nothing and return
+                    return 0;
                 p->priority = priority;
                 p->budget = BUDGET;
                 // if on the ready list we need to move it to the proper queue
@@ -292,10 +294,12 @@ fork(void)
     kfree(np->kstack);
     np->kstack = 0;
     #ifdef CS333_P3P4
+    acquire(&ptable.lock);
     if(stateListRemove(&ptable.pLists.embryo, &ptable.pLists.embryoTail, np) < 0)
       panic("stateListRemove() failed to remove np from embryo list in fork()");
     assertState(np, EMBRYO);
     stateListAdd(&ptable.pLists.free, &ptable.pLists.freeTail, np);
+    release(&ptable.lock);
     #endif
     np->state = UNUSED;
     return -1;
@@ -409,6 +413,14 @@ exit(void)
 
   // Parent might be sleeping in wait().
   wakeup1(proc->parent);
+
+    p = ptable.pLists.embryo;
+    while(p) {
+        if(p->parent == proc) {
+            p->parent = initproc;
+        }
+        p = p->next;
+    }
 
     p = ptable.pLists.running;
     while(p) {
@@ -534,6 +546,13 @@ wait(void)
         }    
         p = p->next;
     }    
+
+    p = ptable.pLists.embryo;
+    while(p) {
+        if(p->parent == proc)
+            havekids = 1;
+        p = p->next;
+    }
 
     p = ptable.pLists.running;
     while(p) {
@@ -879,6 +898,17 @@ kill(int pid)
 
   // Look through each list for process we're looking for. Shortest lists
   // first for efficiency
+
+  // Look through embryo list
+  p = ptable.pLists.embryo;
+  while(p) {
+    if(p->pid == pid) {
+      p->killed = 1; 
+      release(&ptable.lock);
+      return 0;
+    }    
+    p = p->next;
+  }
 
   // Look through running list
   p = ptable.pLists.running;
@@ -1302,7 +1332,6 @@ static void
 promoteAll(void) {
     int i;
     struct proc *p;
-    //struct proc *current;
 
     // if system is not running MLFQ hit eject
     if(MAXPRIO < 1)
@@ -1352,8 +1381,6 @@ promoteAll(void) {
         // promote entire queue by pointing head and tail pointers to next lower queue        
         ptable.pLists.ready[i] = ptable.pLists.ready[i+1];
         ptable.pLists.readyTail[i] = ptable.pLists.readyTail[i+1];
-        if(ptable.pLists.readyTail[i])
-            ptable.pLists.readyTail[i]->next = 0;  // null terminate list if need be
     }
 
     // Lowest queue will be empty

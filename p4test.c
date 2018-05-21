@@ -120,7 +120,7 @@ test1()
     pid[i] = createInfiniteProc();
 
   for(i = 0; i < 3; i++)
-    sleepMessage(5000, "Sleeping... ctrl-p\n");
+    sleepMessage(5000, "Sleeping... ctrl-r\n");
 
   cleanupProcs(pid, max);
   printf(1, "+=+=+=+=+=+=+=+\n");
@@ -280,7 +280,7 @@ test6()
     pid[i] = createInfiniteProc();
 
   for(i = 0; i <= plevels; i++)
-    sleepMessage(2000, "Sleeping... ctrl-p OR ctrl-r\n");
+    sleepMessage(3000, "Sleeping... ctrl-p OR ctrl-r\n");
   if(plevels == 0)
     sleepMessage(2000, "Sleeping... ctrl-p OR ctrl-r\n");
 
@@ -313,7 +313,7 @@ test6()
   }
 
   for(i = max/2; i < max; i++)
-    pid[i] = createInfiniteProc();
+    pid[i] = createSetPrioProc(plevels);
 
   for(i = 0; i <= plevels+1; i++)
     sleepMessage(1500, "Sleeping... ctrl-p OR ctrl-r\n");
@@ -348,6 +348,7 @@ test5()
   int i, prio;
   int max = 10;
   int pid[max];
+  int errorCode;
 
   for(i = 0; i < max; i++) {
     prio = i%(plevels+1);
@@ -357,6 +358,12 @@ test5()
 
   sleepMessage(5000, "Sleeping... ctrl-p\n");
   sleepMessage(5000, "Sleeping... ctrl-r\n");
+  errorCode = setpriority(pid[0], (plevels + 1));
+  if(errorCode == -1)
+    printf(1, "invalid setpriority test PASSES\n");
+  else 
+    printf(1, "invalid setpriority test FAILS\n");
+  
 
   printf(1, "+=+=+=+=+=+=+=+=\n");
   printf(1, "| End: Test 5 |\n");
