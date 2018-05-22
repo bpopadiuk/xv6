@@ -229,6 +229,13 @@ ialloc(ushort type)
   bzero(&din, sizeof(din));
   din.type = xshort(type);
   din.nlink = xshort(1);
+#ifdef CS333_P5
+  // set UID, GID, and protection/mode bits
+  // FIXME not 100% sure this is where I should be doing this...
+  din.mode.asInt = MODE_DEFAULT;
+  din.uid = UID_DEFAULT;
+  din.gid = GID_DEFAULT;
+#endif
   din.size = xint(0);
   winode(inum, &din);
   return inum;

@@ -1,4 +1,4 @@
-struct file {
+struct file {`
   enum { FD_NONE, FD_PIPE, FD_INODE } type;
   int ref; // reference count
   char readable;
@@ -20,6 +20,11 @@ struct inode {
   short major;
   short minor;
   short nlink;
+#ifdef CS333_P5
+  ushort uid;         // owner ID
+  ushort gid;         // group ID
+  union mode_t mode;  // protection/mode bits
+#endif
   uint size;
   uint addrs[NDIRECT+1];
 };

@@ -13,9 +13,17 @@
 // #define FSSIZE       1000  // size of file system in blocks
 #define FSSIZE       2000  // size of file system in blocks  // CS333 requires a larger FS.
 
+// UID_DEFAULT and GID_DEFAULT are used for both the first process and files 
+// created by mkfs when the file system is built
 #ifdef CS333_P2
 #define UID_DEFAULT  0
 #define GID_DEFAULT  0
+#endif
+
+// MODE_DEFAULT is used for files created by mkfs when file
+// system is built
+#ifdef CS333_P5
+#define MODE_DEFAULT 0755
 #endif
 
 #ifdef CS333_P3P4
