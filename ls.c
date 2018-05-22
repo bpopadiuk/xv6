@@ -2,6 +2,11 @@
 #include "stat.h"
 #include "user.h"
 #include "fs.h"
+#ifdef CS333_P5
+#include "print_mode.c"
+
+#define LS_HEADER "mode\tname\tuid\tgid\tinode\tsize\n"
+#endif
 
 char*
 fmtname(char *path)
@@ -43,6 +48,11 @@ ls(char *path)
   
   switch(st.type){
   case T_FILE:
+    #ifdef CS333_P5
+    printf(1, LS_HEADER);
+    print_mode(&st);
+    printf(1, "\t");
+    #endif
     printf(1, "%s %d %d %d\n", fmtname(path), st.type, st.ino, st.size);
     break;
   
