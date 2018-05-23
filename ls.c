@@ -5,7 +5,7 @@
 #ifdef CS333_P5
 #include "print_mode.c"
 
-#define LS_HEADER "mode\tname\tuid\tgid\tinode\tsize\n"
+#define LS_HEADER "mode      \tname\t\tuid\tgid\tinode\tsize\n"
 #endif
 
 char*
@@ -51,9 +51,11 @@ ls(char *path)
     #ifdef CS333_P5
     printf(1, LS_HEADER);
     print_mode(&st);
-    printf(1, "\t");
-    #endif
+    printf(1, " ");
+    printf(1, "%s\t%d\t%d\t%d\t%d\n", fmtname(path), st.uid, st.gid, st.ino, st.size);
+    #else
     printf(1, "%s %d %d %d\n", fmtname(path), st.type, st.ino, st.size);
+    #endif
     break;
   
   case T_DIR:
@@ -64,6 +66,9 @@ ls(char *path)
     strcpy(buf, path);
     p = buf+strlen(buf);
     *p++ = '/';
+    #ifdef CS333_P5
+    printf(1, LS_HEADER);
+    #endif
     while(read(fd, &de, sizeof(de)) == sizeof(de)){
       if(de.inum == 0)
         continue;
@@ -73,7 +78,13 @@ ls(char *path)
         printf(1, "ls: cannot stat %s\n", buf);
         continue;
       }
-      printf(1, "%s %d %d %d\n", fmtname(buf), st.type, st.ino, st.size);
+      #ifdef CS333_P5
+      print_mode(&st);
+      printf(1, " ");
+      printf(1, "%s\t%d\t%d\t%d\t%d\n", fmtname(buf), st.uid, st.gid, st.ino, st.size);
+      #else
+      printf(1, "%s\t%d\t%d\t%d\n", fmtname(buf), st.type, st.ino, st.size);
+      #endif
     }
     break;
   }

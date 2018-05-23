@@ -28,6 +28,8 @@ struct stat {
   short nlink; // Number of links to file
   #ifdef CS333_P5
   union stat_mode_t mode;
+  ushort uid;
+  ushort gid;
   #endif
   uint size;   // Size of file in bytes
 };
