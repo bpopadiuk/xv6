@@ -186,6 +186,11 @@ ialloc(uint dev, short type)
     if(dip->type == 0){  // a free inode
       memset(dip, 0, sizeof(*dip));
       dip->type = type;
+      #ifdef CS333_P5
+      dip->uid = UID_DEFAULT;
+      dip->gid = GID_DEFAULT;
+      dip->mode.asInt = MODE_DEFAULT;
+      #endif
       log_write(bp);   // mark it allocated on the disk
       brelse(bp);
       return iget(dev, inum);
