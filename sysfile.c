@@ -445,14 +445,11 @@ sys_pipe(void)
 int
 sys_chmod(void)
 {
-    char *path, *cmode;
-    int len;
-    inode *ip;
+    char *path;
+    int cmode;
+    struct inode *ip;
 
-    if(argstr(0, &path) < 0 || (len = argstr(1, &cmode)) < 0)
-        return -1;
-
-    if(len != 4 || cmode < 0 || cmode > 1) // check that mode is 4 digits and first digit is 0 or 1
+    if(argstr(0, &path) < 0 || argint(1, &cmode) < 0)
         return -1;
     
     begin_op();
@@ -460,8 +457,10 @@ sys_chmod(void)
         return -1;
     
     ilock(ip);
-    ip->mode->
-    iunlock(ip); 
+    ip->mode.asInt = cmode;
+    iunlock(ip);
+    end_op();
+    return 0; 
 }
 
 int
