@@ -466,12 +466,48 @@ sys_chmod(void)
 int
 sys_chown(void)
 {
+    int owner;
+    char *path;
+    struct inode *ip;
+
+    if(argstr(0, &path) < 0 || argint(1, &owner) < 0)
+        return -1;
+
+    if(owner < 0 || owner > 32767)
+        return -1;
+
+    begin_op();
+    if((ip = namei(path)) == 0)
+        return -1;
+
+    ilock(ip);
+    ip->uid = owner;
+    iunlock(ip);
+    end_op();
     return 0;
 }
 
 int
 sys_chgrp(void)
 {
+    int group;
+    char *path;
+    struct inode *ip;
+
+    if(argstr(0, &path) < 0 || argint(1, &group) < 0)
+        return -1; 
+
+    if(group < 0 || group > 32767)
+        return -1; 
+
+    begin_op();
+    if((ip = namei(path)) == 0)
+        return -1; 
+
+    ilock(ip);
+    ip->gid = group;
+    iunlock(ip);
+    end_op();
     return 0;
 }
 #endif
