@@ -440,3 +440,39 @@ sys_pipe(void)
   fd[1] = fd1;
   return 0;
 }
+
+#ifdef CS333_P5
+int
+sys_chmod(void)
+{
+    char *path, *cmode;
+    int len;
+    inode *ip;
+
+    if(argstr(0, &path) < 0 || (len = argstr(1, &cmode)) < 0)
+        return -1;
+
+    if(len != 4 || cmode < 0 || cmode > 1) // check that mode is 4 digits and first digit is 0 or 1
+        return -1;
+    
+    begin_op();
+    if((ip = namei(path)) == 0)
+        return -1;
+    
+    ilock(ip);
+    ip->mode->
+    iunlock(ip); 
+}
+
+int
+sys_chown(void)
+{
+    return 0;
+}
+
+int
+sys_chgrp(void)
+{
+    return 0;
+}
+#endif
